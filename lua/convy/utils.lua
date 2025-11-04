@@ -3,15 +3,8 @@
 
 local M = {}
 
--- Check if currently in visual mode
-function M.is_visual_mode()
-	local mode = vim.fn.mode()
-	return mode == "v" or mode == "V" or mode == "\22" -- \22 is <C-v>
-end
-
--- Get visual selection
+-- Get visual selection from marks
 function M.get_visual_selection()
-	-- Save and restore selection
 	local start_pos = vim.fn.getpos("'<")
 	local end_pos = vim.fn.getpos("'>")
 
@@ -45,28 +38,42 @@ end
 function M.get_word_under_cursor()
 	local cursor = vim.api.nvim_win_get_cursor(0)
 	local line = cursor[1]
-	local col = cursor[2]
+	local col = cursor[2] + 1 -- Convert to 1-indexed
 
 	local line_text = vim.api.nvim_buf_get_lines(0, line - 1, line, false)[1]
 
-	-- Find word boundaries
-	local start_col = col
-	local end_col = col
+	if not line_text or line_text == "" then
+		return nil, nil, nil
+	end
 
-	-- Move start_col to beginning of word
-	while start_col > 0 do
-		local char = line_text:sub(start_col, start_col)
-		if char:match("[%s,;]") then
+	-- Define word boundary characters (alphanumeric, underscore, and hex-related)
+	local function is_word_char(char)
+		return char:match("[%w_]") ~= nil or char == "x" or char == "b" or char == "o"
+	end
+
+	-- If cursor is on a space or boundary, return nothing
+	local char_under_cursor = line_text:sub(col, col)
+	if not is_word_char(char_under_cursor) then
+		return nil, nil, nil
+	end
+
+	-- Find start of word
+	local start_col = col
+	while start_col > 1 do
+		local prev_char = line_text:sub(start_col - 1, start_col - 1)
+		-- Stop at brackets, spaces, or other delimiters
+		if not is_word_char(prev_char) or prev_char:match("[%[%]%(%)%{%},;]") then
 			break
 		end
 		start_col = start_col - 1
 	end
-	start_col = start_col + 1
 
-	-- Move end_col to end of word
+	-- Find end of word
+	local end_col = col
 	while end_col <= #line_text do
-		local char = line_text:sub(end_col + 1, end_col + 1)
-		if char:match("[%s,;]") or char == "" then
+		local next_char = line_text:sub(end_col + 1, end_col + 1)
+		-- Stop at brackets, spaces, or other delimiters
+		if next_char == "" or not is_word_char(next_char) or next_char:match("[%[%]%(%)%{%},;]") then
 			break
 		end
 		end_col = end_col + 1
@@ -110,18 +117,18 @@ function M.replace_text(start_pos, end_pos, new_text)
 	vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, new_lines)
 end
 
--- Auto-detect input type
+-- Auto-detect input type (improved to avoid false base64 detection)
 function M.detect_type(text)
 	-- Remove whitespace for detection
 	local clean_text = text:gsub("%s", "")
 
-	-- Check for hex (0x prefix or all hex digits)
-	if clean_text:match("^0x[0-9a-fA-F]+") or (clean_text:match("^[0-9a-fA-F]+$") and clean_text:match("[a-fA-F]")) then
+	-- Check for hex (0x prefix or all hex digits with a-f)
+	if clean_text:match("^0x[0-9a-fA-F]+") then
 		return "hex"
 	end
 
-	-- Check for binary (0b prefix or all binary digits)
-	if clean_text:match("^0b[01]+") or clean_text:match("^[01]+$") then
+	-- Check for binary (0b prefix)
+	if clean_text:match("^0b[01]+") then
 		return "bin"
 	end
 
@@ -130,17 +137,28 @@ function M.detect_type(text)
 		return "oct"
 	end
 
-	-- Check for base64 (ends with = or contains base64 chars)
-	if clean_text:match("[A-Za-z0-9+/]+=*$") and #clean_text > 3 then
-		return "base64"
-	end
-
-	-- Check for decimal numbers (space/comma separated numbers)
-	if clean_text:match("^[0-9,]+$") then
+	-- Check for decimal numbers (space/comma separated numbers, or single number)
+	if clean_text:match("^[0-9,]+$") or clean_text:match("^[0-9]+$") then
 		return "dec"
 	end
 
-	-- Default to ASCII if it contains non-numeric characters
+	-- Check if it's all hex digits (without 0x prefix)
+	if clean_text:match("^[0-9a-fA-F]+$") and clean_text:match("[a-fA-F]") then
+		return "hex"
+	end
+
+	-- Check for base64 - must be longer and have proper base64 characteristics
+	-- Base64 should be mostly alphanumeric with + / and optional = padding
+	if
+		#clean_text >= 8
+		and clean_text:match("^[A-Za-z0-9+/]+=*$")
+		-- Should have a good mix of characters (not just one type)
+		and (clean_text:match("[A-Z]") and clean_text:match("[a-z]") or clean_text:match("[+/]"))
+	then
+		return "base64"
+	end
+
+	-- Default to ASCII for anything else
 	return "ascii"
 end
 

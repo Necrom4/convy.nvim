@@ -16,16 +16,23 @@ function M.setup(opts)
 	M.config = vim.tbl_deep_extend("force", M.config, opts)
 end
 
--- Main conversion function
-function M.convert(from_type, to_type)
-	-- Check if we're in visual mode
-	local is_visual = utils.is_visual_mode()
+-- Get ordered list of input types (auto first, then alphabetical)
+function M.get_input_types()
+	return { "auto", "ascii", "base64", "bin", "dec", "hex", "oct" }
+end
 
-	-- Get the text to convert
+-- Get ordered list of output types (alphabetical, no auto)
+function M.get_output_types()
+	return { "ascii", "base64", "bin", "dec", "hex", "oct" }
+end
+
+-- Main conversion function
+function M.convert(from_type, to_type, use_visual)
+	-- Get the text to convert based on use_visual flag
 	local text, start_pos, end_pos
 
-	if is_visual then
-		-- Visual selection
+	if use_visual then
+		-- Visual selection (from stored marks)
 		text, start_pos, end_pos = utils.get_visual_selection()
 	else
 		-- Word under cursor
@@ -62,14 +69,19 @@ function M.convert(from_type, to_type)
 end
 
 -- Show interactive selector for conversion types
-function M.show_selector()
-	local types = { "dec", "hex", "bin", "oct", "ascii", "base64", "auto" }
+function M.show_selector(use_visual)
 	local ui = require("convy.ui")
 
-	ui.show_type_selector(types, function(from_type, to_type)
+	-- Get input types for first step
+	local input_types = M.get_input_types()
+
+	ui.show_type_selector(input_types, function(from_type, to_type)
 		if from_type and to_type then
-			M.convert(from_type, to_type)
+			M.convert(from_type, to_type, use_visual)
 		end
+	end, function()
+		-- This callback provides output types for step 2
+		return M.get_output_types()
 	end)
 end
 

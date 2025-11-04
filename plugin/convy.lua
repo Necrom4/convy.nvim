@@ -15,13 +15,13 @@ vim.api.nvim_create_user_command("Convy", function(opts)
 	local from_type = args[1]
 	local to_type = args[2]
 
+	-- If no arguments, open selection UI
 	if not from_type or not to_type then
-		-- If no arguments, open selection UI
-		require("convy").show_selector()
+		require("convy").show_selector(opts.range > 0)
 		return
 	end
 
-	require("convy").convert(from_type, to_type)
+	require("convy").convert(from_type, to_type, opts.range > 0)
 end, {
 	nargs = "*",
 	range = true,
