@@ -5,10 +5,11 @@ A powerful Neovim plugin for converting between different data formats (decimal,
 ## Features
 
 - 🔄 Convert between multiple formats: decimal, hex, binary, octal, ASCII, base64
-- 🎯 Smart selection: works with visual selection, word under cursor, or explicit input
+- 🎯 Smart selection: works with visual selection or word under cursor automatically
 - 🤖 Auto-detection of input format
+- 🎨 Interactive floating window UI for type selection
 - ⚡ Fast and lightweight
-- 🎨 Multiple ways to use: commands or Lua API
+- 📝 Tab completion for conversion types
 
 ## Installation
 
@@ -20,7 +21,6 @@ A powerful Neovim plugin for converting between different data formats (decimal,
   config = function()
     require("convy").setup({
       -- Optional configuration
-      preserve_visual = true,  -- Keep visual selection after conversion
       notification = true,     -- Show notification after conversion
     })
   end
@@ -72,15 +72,22 @@ Available types: `dec`, `hex`, `bin`, `oct`, `ascii`, `base64`, `auto`
 " Select "0x48 0x65 0x6c 0x6c 0x6f" and run:
 :Convy auto ascii
 " Result: Hello
+
+" Types have tab completion - just type:
+:Convy d<Tab> h<Tab>
+" Will complete to: :Convy dec hex
 ```
 
-#### Convenience Commands
+#### Interactive Selection
 
 ```vim
-:ConvyToHex    " Convert to hexadecimal (auto-detects input)
-:ConvyToDec    " Convert to decimal (auto-detects input)
-:ConvyToBin    " Convert to binary (auto-detects input)
-:ConvyToAscii  " Convert to ASCII (auto-detects input)
+" Open floating window to select types interactively
+:Convy
+
+" Navigate with j/k or arrow keys
+" Press Enter to select
+" Press Esc or q to cancel
+" Press Backspace to go back (when selecting output type)
 ```
 
 ### Lua API
@@ -89,27 +96,11 @@ Available types: `dec`, `hex`, `bin`, `oct`, `ascii`, `base64`, `auto`
 
 ```lua
 -- Convert with explicit types
-require("convy").convert("dec", "hex", false)  -- false = use word under cursor
+-- Automatically detects if in visual mode or uses word under cursor
+require("convy").convert("dec", "hex")
 
--- In visual mode (from a keymap)
-require("convy").convert("dec", "ascii", true)  -- true = use visual selection
-```
-
-#### Convenience Functions
-
-```lua
--- Convert word under cursor to hex
-require("convy").to_hex()
-
--- Convert specific text to hex
-require("convy").to_hex("255")
-
--- Other convenience functions
-require("convy").to_dec()
-require("convy").to_bin()
-require("convy").to_ascii()
-require("convy").to_base64()
-require("convy").from_base64()
+-- Open interactive selector
+require("convy").show_selector()
 ```
 
 ## Usage Examples
@@ -126,7 +117,7 @@ Result: `Hello`
 
 Place cursor on: `0xFF`
 
-Run: `:ConvyToBin`
+Run: `:Convy auto bin`
 
 Result: `0b11111111`
 
@@ -160,9 +151,6 @@ Result: `0xa 0x14 0x1e 0x28`
 require("convy").setup({
   -- Show notifications after conversion (default: true)
   notification = true,
-
-  -- Preserve visual selection after conversion (default: true)
-  preserve_visual = true,
 })
 ```
 
@@ -171,26 +159,18 @@ require("convy").setup({
 Add these to your Neovim config for quick access:
 
 ```lua
--- Visual mode mappings
-vim.keymap.set("v", "<leader>ch", ":ConvyToHex<CR>", { desc = "Convert to hex" })
-vim.keymap.set("v", "<leader>cd", ":ConvyToDec<CR>", { desc = "Convert to decimal" })
-vim.keymap.set("v", "<leader>cb", ":ConvyToBin<CR>", { desc = "Convert to binary" })
-vim.keymap.set("v", "<leader>ca", ":ConvyToAscii<CR>", { desc = "Convert to ASCII" })
+-- Quick conversion with type arguments
+vim.keymap.set({"n", "v"}, "<leader>ch", ":Convy auto hex<CR>", { desc = "Convert to hex" })
+vim.keymap.set({"n", "v"}, "<leader>cd", ":Convy auto dec<CR>", { desc = "Convert to decimal" })
+vim.keymap.set({"n", "v"}, "<leader>cb", ":Convy auto bin<CR>", { desc = "Convert to binary" })
+vim.keymap.set({"n", "v"}, "<leader>ca", ":Convy auto ascii<CR>", { desc = "Convert to ASCII" })
 
--- Normal mode - converts word under cursor
-vim.keymap.set("n", "<leader>ch", ":ConvyToHex<CR>", { desc = "Convert to hex" })
-vim.keymap.set("n", "<leader>cd", ":ConvyToDec<CR>", { desc = "Convert to decimal" })
+-- Open interactive selector
+vim.keymap.set({"n", "v"}, "<leader>cc", ":Convy<CR>", { desc = "Convert (interactive)" })
 
--- Custom conversion
-vim.keymap.set("v", "<leader>cx", function()
-  vim.ui.input({ prompt = "From type: " }, function(from)
-    if not from then return end
-    vim.ui.input({ prompt = "To type: " }, function(to)
-      if not to then return end
-      require("convy").convert(from, to, true)
-    end)
-  end)
-end, { desc = "Custom conversion" })
+-- Specific conversions
+vim.keymap.set({"n", "v"}, "<leader>c64", ":Convy ascii base64<CR>", { desc = "Encode base64" })
+vim.keymap.set({"n", "v"}, "<leader>c46", ":Convy base64 ascii<CR>", { desc = "Decode base64" })
 ```
 
 ## Supported Formats
@@ -206,18 +186,21 @@ end, { desc = "Custom conversion" })
 
 ## How It Works
 
-1. **Input Detection**: The plugin detects whether you're using visual selection or word under cursor
+1. **Input Detection**: The plugin automatically detects whether you're in visual mode or should use the word under cursor
 2. **Type Detection**: If `auto` is used, it intelligently detects the input format
 3. **Conversion**: Converts the input to the desired output format
 4. **Replacement**: Replaces the text in the buffer with the converted result
+5. **Interactive UI**: When called without arguments, opens a floating window for easy type selection
 
 ## Roadmap
 
-- [ ] Interactive UI for selecting input/output types
+- [x] Interactive UI for selecting input/output types
+- [x] Tab completion for conversion types
 - [ ] Support for more formats (RGB colors, Unicode, URL encoding, etc.)
 - [ ] Batch conversion of multiple selections
 - [ ] Conversion history
 - [ ] Custom user-defined converters
+- [ ] Telescope.nvim integration
 
 ## Contributing
 

@@ -7,7 +7,6 @@ local utils = require("convy.utils")
 
 M.config = {
 	-- Default configuration
-	preserve_visual = true, -- Keep visual selection after conversion
 	notification = true, -- Show notification after conversion
 }
 
@@ -18,11 +17,14 @@ function M.setup(opts)
 end
 
 -- Main conversion function
-function M.convert(from_type, to_type, is_visual_range)
+function M.convert(from_type, to_type)
+	-- Check if we're in visual mode
+	local is_visual = utils.is_visual_mode()
+
 	-- Get the text to convert
 	local text, start_pos, end_pos
 
-	if is_visual_range then
+	if is_visual then
 		-- Visual selection
 		text, start_pos, end_pos = utils.get_visual_selection()
 	else
@@ -59,51 +61,16 @@ function M.convert(from_type, to_type, is_visual_range)
 	end
 end
 
--- Convenience functions for specific conversions
-function M.to_hex(text)
-	if not text then
-		text = utils.get_word_under_cursor()
-	end
-	local from_type = utils.detect_type(text)
-	return converters.convert(text, from_type, "hex")
-end
+-- Show interactive selector for conversion types
+function M.show_selector()
+	local types = { "dec", "hex", "bin", "oct", "ascii", "base64", "auto" }
+	local ui = require("convy.ui")
 
-function M.to_dec(text)
-	if not text then
-		text = utils.get_word_under_cursor()
-	end
-	local from_type = utils.detect_type(text)
-	return converters.convert(text, from_type, "dec")
-end
-
-function M.to_bin(text)
-	if not text then
-		text = utils.get_word_under_cursor()
-	end
-	local from_type = utils.detect_type(text)
-	return converters.convert(text, from_type, "bin")
-end
-
-function M.to_ascii(text)
-	if not text then
-		text = utils.get_word_under_cursor()
-	end
-	local from_type = utils.detect_type(text)
-	return converters.convert(text, from_type, "ascii")
-end
-
-function M.to_base64(text)
-	if not text then
-		text = utils.get_word_under_cursor()
-	end
-	return converters.convert(text, "ascii", "base64")
-end
-
-function M.from_base64(text)
-	if not text then
-		text = utils.get_word_under_cursor()
-	end
-	return converters.convert(text, "base64", "ascii")
+	ui.show_type_selector(types, function(from_type, to_type)
+		if from_type and to_type then
+			M.convert(from_type, to_type)
+		end
+	end)
 end
 
 return M

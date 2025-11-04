@@ -6,6 +6,9 @@ if vim.fn.has("nvim-0.8.0") ~= 1 then
 	return
 end
 
+-- Available types for completion
+local types = { "dec", "hex", "bin", "oct", "ascii", "base64", "auto" }
+
 -- Create the main :Convy command
 vim.api.nvim_create_user_command("Convy", function(opts)
 	local args = vim.split(opts.args, "%s+")
@@ -13,34 +16,34 @@ vim.api.nvim_create_user_command("Convy", function(opts)
 	local to_type = args[2]
 
 	if not from_type or not to_type then
-		-- If no arguments, show available types (future: open selection UI)
-		vim.notify(
-			"Usage: :Convy <from_type> <to_type>\nAvailable types: dec, hex, bin, oct, ascii, base64",
-			vim.log.levels.INFO
-		)
+		-- If no arguments, open selection UI
+		require("convy").show_selector()
 		return
 	end
 
-	require("convy").convert(from_type, to_type, opts.range > 0)
+	require("convy").convert(from_type, to_type)
 end, {
 	nargs = "*",
 	range = true,
+	complete = function(arg_lead, cmd_line, cursor_pos)
+		-- Parse command line to see which argument we're completing
+		local args = vim.split(cmd_line, "%s+", { trimempty = true })
+		local num_args = #args
+
+		-- If typing :Convy <cursor>, we're on first arg
+		-- If typing :Convy dec <cursor>, we're on second arg
+		if cmd_line:sub(cursor_pos, cursor_pos) == " " then
+			num_args = num_args + 1
+		end
+
+		-- Complete from the types list
+		local matches = {}
+		for _, type in ipairs(types) do
+			if type:find(arg_lead, 1, true) == 1 then
+				table.insert(matches, type)
+			end
+		end
+		return matches
+	end,
 	desc = "Convert between different number/text formats",
 })
-
--- Create convenience commands for common conversions
-vim.api.nvim_create_user_command("ConvyToHex", function(opts)
-	require("convy").convert("auto", "hex", opts.range > 0)
-end, { range = true, desc = "Convert to hexadecimal" })
-
-vim.api.nvim_create_user_command("ConvyToDec", function(opts)
-	require("convy").convert("auto", "dec", opts.range > 0)
-end, { range = true, desc = "Convert to decimal" })
-
-vim.api.nvim_create_user_command("ConvyToBin", function(opts)
-	require("convy").convert("auto", "bin", opts.range > 0)
-end, { range = true, desc = "Convert to binary" })
-
-vim.api.nvim_create_user_command("ConvyToAscii", function(opts)
-	require("convy").convert("auto", "ascii", opts.range > 0)
-end, { range = true, desc = "Convert to ASCII" })

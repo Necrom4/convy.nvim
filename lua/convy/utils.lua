@@ -3,8 +3,15 @@
 
 local M = {}
 
+-- Check if currently in visual mode
+function M.is_visual_mode()
+	local mode = vim.fn.mode()
+	return mode == "v" or mode == "V" or mode == "\22" -- \22 is <C-v>
+end
+
 -- Get visual selection
 function M.get_visual_selection()
+	-- Save and restore selection
 	local start_pos = vim.fn.getpos("'<")
 	local end_pos = vim.fn.getpos("'>")
 
