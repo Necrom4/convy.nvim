@@ -34,7 +34,7 @@ A powerful Neovim plugin to convert between different formats
 {
   opts = {
     -- default configuration
-    notification = true,
+    notifications = true,
   },
   keys = {
     -- example keymaps
@@ -59,13 +59,13 @@ A powerful Neovim plugin to convert between different formats
 ## Usage
 
 ```vim
-:Convy <from_type> <to_type>
+:Convy <input_format> <output_format>
 :Convy " open interactive selection window
 ```
 
 ```lua
-lua require("convy").convert("auto", "<to_type>") -- `auto` guesses the type of the input
-lua require("convy").convert("<from_type>", "<to_type>", true) -- boolean indicates use of visual selection
+lua require("convy").convert("auto", "<output_format>") -- `auto` guesses the format of the input
+lua require("convy").convert("<input_format>", "<output_format>", true) -- boolean indicates use of visual selection
 lua require("convy").show_selector() -- open interactive selection window
 ```
 
@@ -100,6 +100,6 @@ lua require("convy").show_selector() -- open interactive selection window
   - [ ] Colors (RGB, HSL, ...)
   - [ ] Sizes (px, mm, in, ...)
   - [ ] Temperatures (C, F, ...)
-- [x] Interactive UI for selecting input/output types
-- [x] Tab completion for conversion types
+- [x] Interactive UI for selecting input/output formats
+- [x] Tab completion for conversion formats
 - [x] Automatic format detection

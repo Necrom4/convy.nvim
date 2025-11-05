@@ -1,62 +1,51 @@
--- lua/convy/converters.lua
--- Conversion functions for different types
-
 local M = {}
 
--- Base64 encoding/decoding tables
 local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
--- Parse input to numbers based on type
-local function parse_input(text, from_type)
+local function parse_input(text, input_format)
 	local numbers = {}
 
-	if from_type == "dec" then
-		-- Parse decimal numbers (can be space or comma separated)
+	if input_format == "dec" then
 		for num in text:gmatch("[0-9]+") do
 			table.insert(numbers, tonumber(num))
 		end
-	elseif from_type == "hex" then
-		-- Parse hexadecimal (with or without 0x prefix)
+	elseif input_format == "hex" then
 		for num in text:gmatch("0?x?([0-9a-fA-F]+)") do
 			table.insert(numbers, tonumber(num, 16))
 		end
-	elseif from_type == "bin" then
-		-- Parse binary (with or without 0b prefix)
+	elseif input_format == "bin" then
 		for num in text:gmatch("0?b?([01]+)") do
 			table.insert(numbers, tonumber(num, 2))
 		end
-	elseif from_type == "oct" then
-		-- Parse octal (with or without 0o prefix)
+	elseif input_format == "oct" then
 		for num in text:gmatch("0?o?([0-7]+)") do
 			table.insert(numbers, tonumber(num, 8))
 		end
-	elseif from_type == "ascii" then
-		-- Parse ASCII characters to their byte values
+	elseif input_format == "ascii" then
 		for i = 1, #text do
 			table.insert(numbers, text:byte(i))
 		end
 	else
-		error("Unknown input type: " .. from_type)
+		error("Unknown input format: " .. input_format)
 	end
 
 	return numbers
 end
 
--- Format numbers to output type
-local function format_output(numbers, to_type)
+local function format_output(numbers, output_format)
 	local results = {}
 
-	if to_type == "dec" then
+	if output_format == "dec" then
 		for _, num in ipairs(numbers) do
 			table.insert(results, tostring(num))
 		end
 		return table.concat(results, " ")
-	elseif to_type == "hex" then
+	elseif output_format == "hex" then
 		for _, num in ipairs(numbers) do
 			table.insert(results, string.format("0x%x", num))
 		end
 		return table.concat(results, " ")
-	elseif to_type == "bin" then
+	elseif output_format == "bin" then
 		for _, num in ipairs(numbers) do
 			local bin = ""
 			local n = num
@@ -71,12 +60,12 @@ local function format_output(numbers, to_type)
 			table.insert(results, "0b" .. bin)
 		end
 		return table.concat(results, " ")
-	elseif to_type == "oct" then
+	elseif output_format == "oct" then
 		for _, num in ipairs(numbers) do
 			table.insert(results, string.format("0o%o", num))
 		end
 		return table.concat(results, " ")
-	elseif to_type == "ascii" then
+	elseif output_format == "ascii" then
 		for _, num in ipairs(numbers) do
 			if num >= 0 and num <= 127 then
 				table.insert(results, string.char(num))
@@ -86,14 +75,12 @@ local function format_output(numbers, to_type)
 		end
 		return table.concat(results)
 	else
-		error("Unknown output type: " .. to_type)
+		error("Unknown output format: " .. output_format)
 	end
 end
 
--- Base64 encoding
 local function encode_base64(text)
 	local result = ""
-	local padding = ""
 
 	for i = 1, #text, 3 do
 		local b1, b2, b3 = text:byte(i), text:byte(i + 1), text:byte(i + 2)
@@ -122,7 +109,6 @@ local function encode_base64(text)
 	return result
 end
 
--- Base64 decoding
 local function decode_base64(text)
 	-- Remove whitespace
 	text = text:gsub("%s", "")
@@ -160,23 +146,22 @@ local function decode_base64(text)
 	return result
 end
 
--- Main conversion function
-function M.convert(text, from_type, to_type)
+function M.convert(text, input_format, output_format)
 	-- Handle base64 separately as it's text-based
-	if from_type == "base64" and to_type == "ascii" then
+	if input_format == "base64" and output_format == "ascii" then
 		return decode_base64(text)
-	elseif from_type == "ascii" and to_type == "base64" then
+	elseif input_format == "ascii" and output_format == "base64" then
 		return encode_base64(text)
 	end
 
 	-- For numeric conversions
-	local numbers = parse_input(text, from_type)
+	local numbers = parse_input(text, input_format)
 
 	if #numbers == 0 then
 		error("No valid numbers found in input")
 	end
 
-	return format_output(numbers, to_type)
+	return format_output(numbers, output_format)
 end
 
 return M
