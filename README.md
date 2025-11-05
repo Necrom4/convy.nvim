@@ -2,14 +2,7 @@
 
 A powerful Neovim plugin to convert between different formats
 
-<!--toc:start-->
-
-- [Features](#features)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Roadmap](#roadmap)
-<!--toc:end-->
+![output](https://github.com/user-attachments/assets/ef769b97-5e10-41c1-af21-c66a81deb4c0)
 
 ## ✨ Features
 
@@ -56,7 +49,7 @@ A powerful Neovim plugin to convert between different formats
 }
 ```
 
-## Usage
+## 🚀 Usage
 
 ```vim
 :Convy <input_format> <output_format>
@@ -93,7 +86,7 @@ lua require("convy").show_selector() -- open interactive selection window
 " Result: 72 101 108 108 111
 ```
 
-## Roadmap
+## 🏆 Roadmap
 
 - [ ] Drop visual-mode flag for util.function that guesses if we executed Convy in visual mode
 - [ ] Support for more formats
