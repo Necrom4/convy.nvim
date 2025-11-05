@@ -8,8 +8,8 @@ local function create_float_win(width, height, title)
 	local buf = vim.api.nvim_create_buf(false, true)
 
 	-- Set buffer options
-	vim.api.nvim_buf_set_option(buf, "bufhidden", "wipe")
-	vim.api.nvim_buf_set_option(buf, "filetype", "convy")
+	vim.bo[buf].bufhidden = "wipe"
+	vim.bo[buf].filetype = "convy"
 
 	-- Calculate window position (centered)
 	local ui = vim.api.nvim_list_uis()[1]
@@ -35,8 +35,8 @@ local function create_float_win(width, height, title)
 	local win = vim.api.nvim_open_win(buf, true, opts)
 
 	-- Set window options
-	vim.api.nvim_win_set_option(win, "winblend", 0)
-	vim.api.nvim_win_set_option(win, "cursorline", true)
+	vim.wo[win].winblend = 0
+	vim.wo[win].cursorline = true
 
 	return buf, win
 end
@@ -112,7 +112,7 @@ function M.show_type_selector(input_types, callback, get_output_types_fn)
 		end
 
 		-- Make buffer unmodifiable
-		vim.api.nvim_buf_set_option(buf, "modifiable", false)
+		vim.bo[buf].modifiable = false
 	end
 
 	local function close()
@@ -142,7 +142,7 @@ function M.show_type_selector(input_types, callback, get_output_types_fn)
 				row = math.floor((vim.o.lines - new_height) / 2),
 			})
 
-			vim.api.nvim_buf_set_option(buf, "modifiable", true)
+			vim.bo[buf].modifiable = true
 			render()
 		else
 			state.to_type = selected
@@ -159,7 +159,7 @@ function M.show_type_selector(input_types, callback, get_output_types_fn)
 			state.cursor = 1
 		end
 
-		vim.api.nvim_buf_set_option(buf, "modifiable", true)
+		vim.bo[buf].modifiable = true
 		render()
 	end
 
@@ -205,7 +205,7 @@ function M.show_type_selector(input_types, callback, get_output_types_fn)
 					row = math.floor((vim.o.lines - new_height) / 2),
 				})
 
-				vim.api.nvim_buf_set_option(buf, "modifiable", true)
+				vim.bo[buf].modifiable = true
 				render()
 			end
 		end, opts)
