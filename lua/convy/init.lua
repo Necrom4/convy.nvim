@@ -4,6 +4,9 @@ local utils = require("convy.utils")
 
 M.config = {
 	notifications = true,
+	window = {
+		blend = 25,
+	},
 }
 
 function M.setup(opts)

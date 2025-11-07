@@ -1,4 +1,5 @@
 local M = {}
+local config = require("convy.init").config
 
 local function create_float_win(width, height, title)
 	local buf = vim.api.nvim_create_buf(false, true)
@@ -28,8 +29,7 @@ local function create_float_win(width, height, title)
 
 	local win = vim.api.nvim_open_win(buf, true, opts)
 
-	-- Set window options
-	vim.wo[win].winblend = 0
+	vim.wo[win].winblend = config.window.blend
 	vim.wo[win].cursorline = false
 
 	return buf, win
