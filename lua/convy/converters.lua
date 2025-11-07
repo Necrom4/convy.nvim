@@ -2,83 +2,6 @@ local M = {}
 
 local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-local function parse_input(text, input_format)
-	local numbers = {}
-
-	if input_format == "dec" then
-		for num in text:gmatch("[0-9]+") do
-			table.insert(numbers, tonumber(num))
-		end
-	elseif input_format == "hex" then
-		for num in text:gmatch("0?x?([0-9a-fA-F]+)") do
-			table.insert(numbers, tonumber(num, 16))
-		end
-	elseif input_format == "bin" then
-		for num in text:gmatch("0?b?([01]+)") do
-			table.insert(numbers, tonumber(num, 2))
-		end
-	elseif input_format == "oct" then
-		for num in text:gmatch("0?o?([0-7]+)") do
-			table.insert(numbers, tonumber(num, 8))
-		end
-	elseif input_format == "ascii" then
-		for i = 1, #text do
-			table.insert(numbers, text:byte(i))
-		end
-	else
-		error("Unknown input format: " .. input_format)
-	end
-
-	return numbers
-end
-
-local function format_output(numbers, output_format)
-	local results = {}
-
-	if output_format == "dec" then
-		for _, num in ipairs(numbers) do
-			table.insert(results, tostring(num))
-		end
-		return table.concat(results, " ")
-	elseif output_format == "hex" then
-		for _, num in ipairs(numbers) do
-			table.insert(results, string.format("0x%x", num))
-		end
-		return table.concat(results, " ")
-	elseif output_format == "bin" then
-		for _, num in ipairs(numbers) do
-			local bin = ""
-			local n = num
-			if n == 0 then
-				bin = "0"
-			else
-				while n > 0 do
-					bin = tostring(n % 2) .. bin
-					n = math.floor(n / 2)
-				end
-			end
-			table.insert(results, "0b" .. bin)
-		end
-		return table.concat(results, " ")
-	elseif output_format == "oct" then
-		for _, num in ipairs(numbers) do
-			table.insert(results, string.format("0o%o", num))
-		end
-		return table.concat(results, " ")
-	elseif output_format == "ascii" then
-		for _, num in ipairs(numbers) do
-			if num >= 0 and num <= 127 then
-				table.insert(results, string.char(num))
-			else
-				table.insert(results, "?")
-			end
-		end
-		return table.concat(results)
-	else
-		error("Unknown output format: " .. output_format)
-	end
-end
-
 local function encode_base64(text)
 	local result = ""
 
@@ -146,15 +69,95 @@ local function decode_base64(text)
 	return result
 end
 
-function M.convert(text, input_format, output_format)
-	-- Handle base64 separately as it's text-based
-	if input_format == "base64" and output_format == "ascii" then
-		return decode_base64(text)
-	elseif input_format == "ascii" and output_format == "base64" then
-		return encode_base64(text)
+local function parse_input(text, input_format)
+	local numbers = {}
+
+	if input_format == "ascii" then
+		for i = 1, #text do
+			table.insert(numbers, text:byte(i))
+		end
+	elseif input_format == "bin" then
+		for num in text:gmatch("0?b?([01]+)") do
+			table.insert(numbers, tonumber(num, 2))
+		end
+	elseif input_format == "base64" then
+		local decoded = decode_base64(text)
+		for i = 1, #decoded do
+			table.insert(numbers, decoded:byte(i))
+		end
+	elseif input_format == "dec" then
+		for num in text:gmatch("[0-9]+") do
+			table.insert(numbers, tonumber(num))
+		end
+	elseif input_format == "hex" then
+		for num in text:gmatch("0?x?([0-9a-fA-F]+)") do
+			table.insert(numbers, tonumber(num, 16))
+		end
+	elseif input_format == "oct" then
+		for num in text:gmatch("0?o?([0-7]+)") do
+			table.insert(numbers, tonumber(num, 8))
+		end
+	else
+		error("Unknown input format: " .. input_format)
 	end
 
-	-- For numeric conversions
+	return numbers
+end
+
+local function format_output(numbers, output_format)
+	local results = {}
+
+	if output_format == "ascii" then
+		for _, num in ipairs(numbers) do
+			if num >= 0 and num <= 127 then
+				table.insert(results, string.char(num))
+			else
+				table.insert(results, "?")
+			end
+		end
+		return table.concat(results)
+	elseif output_format == "base64" then
+		local text = ""
+		for _, num in ipairs(numbers) do
+			text = text .. string.char(num)
+		end
+		return encode_base64(text)
+	elseif output_format == "bin" then
+		for _, num in ipairs(numbers) do
+			local bin = ""
+			local n = num
+			if n == 0 then
+				bin = "0"
+			else
+				while n > 0 do
+					bin = tostring(n % 2) .. bin
+					n = math.floor(n / 2)
+				end
+			end
+			table.insert(results, "0b" .. bin)
+		end
+		return table.concat(results, " ")
+	elseif output_format == "dec" then
+		for _, num in ipairs(numbers) do
+			table.insert(results, tostring(num))
+		end
+		return table.concat(results, " ")
+	elseif output_format == "hex" then
+		for _, num in ipairs(numbers) do
+			table.insert(results, string.format("0x%x", num))
+		end
+		return table.concat(results, " ")
+	elseif output_format == "oct" then
+		for _, num in ipairs(numbers) do
+			table.insert(results, string.format("0o%o", num))
+		end
+		return table.concat(results, " ")
+	else
+		error("Unknown output format: " .. output_format)
+	end
+end
+
+function M.convert(text, input_format, output_format)
 	local numbers = parse_input(text, input_format)
 
 	if #numbers == 0 then
