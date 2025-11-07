@@ -30,7 +30,7 @@ local function create_float_win(width, height, title)
 
 	-- Set window options
 	vim.wo[win].winblend = 0
-	vim.wo[win].cursorline = true
+	vim.wo[win].cursorline = false
 
 	return buf, win
 end
