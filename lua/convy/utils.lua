@@ -1,5 +1,12 @@
 local M = {}
 
+function M.separator(sep)
+	local convy = require("convy.init")
+	convy.config.separator = sep
+	convy.setup(convy.config)
+	vim.notify("Convy separator changed to: " .. sep)
+end
+
 function M.get_visual_selection()
 	local start_pos = vim.fn.getpos("'<")
 	local end_pos = vim.fn.getpos("'>")

@@ -105,6 +105,7 @@ local function parse_input(text, input_format)
 end
 
 local function format_output(numbers, output_format)
+	local config = require("convy.init").config
 	local results = {}
 
 	if output_format == "ascii" then
@@ -136,22 +137,22 @@ local function format_output(numbers, output_format)
 			end
 			table.insert(results, "0b" .. bin)
 		end
-		return table.concat(results, " ")
+		return table.concat(results, config.separator)
 	elseif output_format == "dec" then
 		for _, num in ipairs(numbers) do
 			table.insert(results, tostring(num))
 		end
-		return table.concat(results, " ")
+		return table.concat(results, config.separator)
 	elseif output_format == "hex" then
 		for _, num in ipairs(numbers) do
 			table.insert(results, string.format("0x%x", num))
 		end
-		return table.concat(results, " ")
+		return table.concat(results, config.separator)
 	elseif output_format == "oct" then
 		for _, num in ipairs(numbers) do
 			table.insert(results, string.format("0o%o", num))
 		end
-		return table.concat(results, " ")
+		return table.concat(results, config.separator)
 	else
 		error("Unknown output format: " .. output_format)
 	end

@@ -1,17 +1,17 @@
-local M = {}
 local converters = require("convy.converters")
 local utils = require("convy.utils")
+local M = {}
 
 M.config = {
 	notifications = true,
+	separator = " ",
 	window = {
 		blend = 25,
 	},
 }
 
 function M.setup(opts)
-	opts = opts or {}
-	M.config = vim.tbl_deep_extend("force", M.config, opts)
+	M.config = vim.tbl_deep_extend("force", M.config, opts or {})
 end
 
 function M.get_input_formats()
