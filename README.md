@@ -28,6 +28,7 @@ A powerful Neovim plugin to convert between different formats
   opts = {
     -- default configuration
     notifications = true,
+    separator = " ",
     window = {
       blend = 25,
     },
