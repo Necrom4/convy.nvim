@@ -16,7 +16,7 @@ A powerful Neovim plugin to convert between different formats
 ```lua
 {
   "necrom4/convy.nvim",
-  cmd = "Convy",
+  cmd = { "Convy", "ConvySeparator" },
   opts = {}
 }
 ```
@@ -49,6 +49,13 @@ A powerful Neovim plugin to convert between different formats
       mode = { "n", "v" },
       silent = true,
     },
+    {
+      "<leader>cs",
+      ":ConvySeparator<CR>",
+      desc = "Set convertion separator (visual selection)",
+      mode = { "v" },
+      silent = true,
+    },
   }
 }
 ```
@@ -58,12 +65,24 @@ A powerful Neovim plugin to convert between different formats
 ```vim
 :Convy <input_format> <output_format>
 :Convy " open interactive selection window
+:'<,'>Convy <<input_format> <output_format>> " visual selection as string to work on
 ```
 
 ```lua
 lua require("convy").convert("auto", "<output_format>") -- `auto` guesses the format of the input
 lua require("convy").convert("<input_format>", "<output_format>", true) -- boolean indicates use of visual selection
 lua require("convy").show_selector() -- open interactive selection window
+```
+
+```vim
+:ConvySeparator ", " " sets the separator to `, `
+:ConvySeparator \", \" " sets the separator to `", "`
+:ConvySeparator | - | " spaces are not ignored, this sets the separator to `| - |`
+:'<,'>ConvySeparator " visual selection as selector
+```
+
+```lua
+lua require("convy.utils").separator(", ") -- sets the separator to `, `
 ```
 
 **Examples:**

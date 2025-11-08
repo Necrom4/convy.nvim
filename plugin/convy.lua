@@ -5,18 +5,17 @@ end
 
 local formats = { "auto", "ascii", "base64", "bin", "dec", "hex", "oct" }
 
--- Create the main :Convy command
 vim.api.nvim_create_user_command("Convy", function(opts)
 	local args = vim.split(opts.args, "%s+")
 	local input_format = args[1]
 	local output_format = args[2]
 
 	if not input_format or not output_format then
-		require("convy").show_selector(opts.range > 0)
+		require("convy.init").show_selector(opts.range > 0)
 		return
 	end
 
-	require("convy").convert(input_format, output_format, opts.range > 0)
+	require("convy.init").convert(input_format, output_format, opts.range > 0)
 end, {
 	nargs = "*",
 	range = true,
@@ -41,4 +40,36 @@ end, {
 		return matches
 	end,
 	desc = "Convert format",
+})
+
+vim.api.nvim_create_user_command("ConvySeparator", function(opts)
+	local f_separator = require("convy.utils").separator
+
+	local function clean_input(str)
+		str = vim.trim(str or "")
+
+		if (str:sub(1, 1) == '"' and str:sub(-1) == '"') or (str:sub(1, 1) == "'" and str:sub(-1) == "'") then
+			str = str:sub(2, -2)
+		end
+
+		str = str:gsub('\\"', '"')
+		str = str:gsub("\\'", "'")
+
+		return str
+	end
+
+	if not opts.args then
+		f_separator(" ")
+		return
+	elseif opts.range > 0 then
+		local text = require("convy.utils").get_visual_selection()
+		f_separator(text)
+		return
+	end
+
+	f_separator(clean_input(opts.args))
+end, {
+	nargs = "*",
+	range = true,
+	desc = "Change convertion separator",
 })
