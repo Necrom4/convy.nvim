@@ -83,9 +83,9 @@ function M.show_format_selector(input_formats, callback, get_output_formats_fn)
 
 		table.insert(lines, "")
 		if state.step == 1 then
-			table.insert(lines, "  [Enter] Select  [Esc/q] Cancel")
+			table.insert(lines, "  [Enter/l] Select  [Esc/q] Cancel")
 		else
-			table.insert(lines, "  [Enter] Select  [BS] Back  [Esc/q] Cancel")
+			table.insert(lines, "  [Enter/l] Select  [BS/h] Back  [Esc/q] Cancel")
 		end
 		table.insert(highlights, { line = #lines - 1, hl = "Comment" })
 
@@ -168,12 +168,12 @@ function M.show_format_selector(input_formats, callback, get_output_formats_fn)
 			move_cursor(-1)
 		end, opts)
 		vim.keymap.set("n", "<CR>", select_format, opts)
-		vim.keymap.set("n", "<Space>", select_format, opts)
+		vim.keymap.set("n", "l", select_format, opts)
 		vim.keymap.set("n", "<Esc>", close, opts)
 		vim.keymap.set("n", "q", close, opts)
 
 		-- Go back (only on step 2)
-		vim.keymap.set("n", "<BS>", function()
+		local function back_action()
 			if state.step == 2 then
 				state.step = 1
 				state.cursor = 1
@@ -192,7 +192,9 @@ function M.show_format_selector(input_formats, callback, get_output_formats_fn)
 				vim.bo[buf].modifiable = true
 				render()
 			end
-		end, opts)
+		end
+		vim.keymap.set("n", "<BS>", back_action, opts)
+		vim.keymap.set("n", "h", back_action, opts)
 	end
 
 	-- Create window and render
