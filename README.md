@@ -1,12 +1,12 @@
 # 🧮 convy.nvim
 
-A powerful Neovim plugin to convert between different formats
+A powerful Neovim plugin to convert between various formats
 
 ![output](https://github.com/user-attachments/assets/ef769b97-5e10-41c1-af21-c66a81deb4c0)
 
 ## ✨ Features
 
-- 🔄 Convert between multiple formats: ASCII, binary, decimal, hex, octal, base64
+- 🔄 Formats: ASCII, binary, decimal, hex, octal, base64
 - 🤖 Auto-detection of input format
 - 🎯 Smart selection: works with visual selection or word-under-cursor
 - 🎨 Interactive floating window UI for format selection
