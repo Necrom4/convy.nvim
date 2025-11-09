@@ -2,7 +2,7 @@ local M = {}
 
 local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
-local function encode_base64(text)
+local function encode_b64(text)
 	local result = ""
 
 	for i = 1, #text, 3 do
@@ -32,7 +32,7 @@ local function encode_base64(text)
 	return result
 end
 
-local function decode_base64(text)
+local function decode_b64(text)
 	-- Remove whitespace
 	text = text:gsub("%s", "")
 
@@ -92,8 +92,8 @@ local function parse_input(text, input_format)
 		for num in text:gmatch("0?o?([0-7]+)") do
 			table.insert(numbers, tonumber(num, 8))
 		end
-	elseif input_format == "base64" then
-		local decoded = decode_base64(text)
+	elseif input_format == "b64" then
+		local decoded = decode_b64(text)
 		for i = 1, #decoded do
 			table.insert(numbers, decoded:byte(i))
 		end
@@ -147,12 +147,12 @@ local function format_output(numbers, output_format)
 			table.insert(results, string.format("0o%o", num))
 		end
 		return table.concat(results, config.separator)
-	elseif output_format == "base64" then
+	elseif output_format == "b64" then
 		local text = ""
 		for _, num in ipairs(numbers) do
 			text = text .. string.char(num)
 		end
-		return encode_base64(text)
+		return encode_b64(text)
 	else
 		error("Unknown output format: " .. output_format)
 	end

@@ -147,7 +147,7 @@ function M.detect_format(text)
 		-- Should have a good mix of characters (not just one format)
 		and (clean_text:match("[A-Z]") and clean_text:match("[a-z]") or clean_text:match("[+/]"))
 	then
-		return "base64"
+		return "b64"
 	end
 
 	return "ascii"
