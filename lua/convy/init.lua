@@ -15,11 +15,11 @@ function M.setup(opts)
 end
 
 function M.get_input_formats()
-	return { "auto", "ascii", "base64", "bin", "dec", "hex", "oct" }
+	return { "auto", "ascii", "bin", "dec", "hex", "oct", "base64" }
 end
 
 function M.get_output_formats()
-	return { "ascii", "base64", "bin", "dec", "hex", "oct" }
+	return { "ascii", "bin", "dec", "hex", "oct", "base64" }
 end
 
 -- Main conversion function

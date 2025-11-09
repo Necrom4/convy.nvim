@@ -80,11 +80,6 @@ local function parse_input(text, input_format)
 		for num in text:gmatch("0?b?([01]+)") do
 			table.insert(numbers, tonumber(num, 2))
 		end
-	elseif input_format == "base64" then
-		local decoded = decode_base64(text)
-		for i = 1, #decoded do
-			table.insert(numbers, decoded:byte(i))
-		end
 	elseif input_format == "dec" then
 		for num in text:gmatch("[0-9]+") do
 			table.insert(numbers, tonumber(num))
@@ -96,6 +91,11 @@ local function parse_input(text, input_format)
 	elseif input_format == "oct" then
 		for num in text:gmatch("0?o?([0-7]+)") do
 			table.insert(numbers, tonumber(num, 8))
+		end
+	elseif input_format == "base64" then
+		local decoded = decode_base64(text)
+		for i = 1, #decoded do
+			table.insert(numbers, decoded:byte(i))
 		end
 	else
 		error("Unknown input format: " .. input_format)
@@ -117,12 +117,6 @@ local function format_output(numbers, output_format)
 			end
 		end
 		return table.concat(results)
-	elseif output_format == "base64" then
-		local text = ""
-		for _, num in ipairs(numbers) do
-			text = text .. string.char(num)
-		end
-		return encode_base64(text)
 	elseif output_format == "bin" then
 		for _, num in ipairs(numbers) do
 			local bin = ""
@@ -153,6 +147,12 @@ local function format_output(numbers, output_format)
 			table.insert(results, string.format("0o%o", num))
 		end
 		return table.concat(results, config.separator)
+	elseif output_format == "base64" then
+		local text = ""
+		for _, num in ipairs(numbers) do
+			text = text .. string.char(num)
+		end
+		return encode_base64(text)
 	else
 		error("Unknown output format: " .. output_format)
 	end

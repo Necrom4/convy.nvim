@@ -121,15 +121,6 @@ function M.detect_format(text)
 	-- Remove whitespace for detection
 	local clean_text = text:gsub("%s", "")
 
-	if
-		#clean_text >= 8
-		and clean_text:match("^[A-Za-z0-9+/]+=*$")
-		-- Should have a good mix of characters (not just one format)
-		and (clean_text:match("[A-Z]") and clean_text:match("[a-z]") or clean_text:match("[+/]"))
-	then
-		return "base64"
-	end
-
 	if clean_text:match("^0b[01]+") then
 		return "bin"
 	end
@@ -148,6 +139,15 @@ function M.detect_format(text)
 
 	if clean_text:match("^0o[0-7]+") then
 		return "oct"
+	end
+
+	if
+		#clean_text >= 8
+		and clean_text:match("^[A-Za-z0-9+/]+=*$")
+		-- Should have a good mix of characters (not just one format)
+		and (clean_text:match("[A-Z]") and clean_text:match("[a-z]") or clean_text:match("[+/]"))
+	then
+		return "base64"
 	end
 
 	return "ascii"
