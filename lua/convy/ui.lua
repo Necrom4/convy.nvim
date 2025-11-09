@@ -196,7 +196,7 @@ function M.show_format_selector(input_formats, callback, get_output_formats_fn)
 	end
 
 	-- Create window and render
-	buf, win = create_float_win(width, height, " Convy - Type Selector ")
+	buf, win = create_float_win(width, height, " Convy ")
 	render()
 	setup_keymaps()
 
