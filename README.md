@@ -6,7 +6,7 @@ A powerful Neovim plugin to convert between various formats
 
 ## ✨ Features
 
-- 🔄 Formats: ASCII, binary, decimal, hex, octal, base64
+- 🔄 Formats: ASCII, binary, decimal, hex, octal, base64, morse
 - 🤖 Auto-detection of input format
 - 🎯 Smart selection: works with visual selection or word-under-cursor
 - 🎨 Interactive floating window UI for format selection
