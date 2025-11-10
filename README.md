@@ -2,7 +2,7 @@
 
 A powerful Neovim plugin to convert between various formats
 
-![output](https://github.com/user-attachments/assets/ef769b97-5e10-41c1-af21-c66a81deb4c0)
+![showcase](https://github.com/user-attachments/assets/d05045db-326a-4e26-b517-0ca7ecdbbc81)
 
 ## ✨ Features
 
