@@ -15,11 +15,11 @@ function M.setup(opts)
 end
 
 function M.get_input_formats()
-	return { "auto", "ascii", "bin", "dec", "hex", "oct", "b64" }
+	return { "auto", "ascii", "bin", "dec", "hex", "oct", "b64", "morse" }
 end
 
 function M.get_output_formats()
-	return { "ascii", "bin", "dec", "hex", "oct", "b64" }
+	return { "ascii", "bin", "dec", "hex", "oct", "b64", "morse" }
 end
 
 -- Main conversion function

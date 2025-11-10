@@ -144,10 +144,15 @@ function M.detect_format(text)
 	if
 		#clean_text >= 8
 		and clean_text:match("^[A-Za-z0-9+/]+=*$")
-		-- Should have a good mix of characters (not just one format)
 		and (clean_text:match("[A-Z]") and clean_text:match("[a-z]") or clean_text:match("[+/]"))
 	then
 		return "b64"
+	end
+
+	if text:match("^[%s%.%-%/%|]+$") then
+		if text:match("[%.-]") then
+			return "morse"
+		end
 	end
 
 	return "ascii"

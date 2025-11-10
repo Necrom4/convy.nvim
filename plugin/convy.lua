@@ -3,7 +3,7 @@ if vim.fn.has("nvim-0.8.0") ~= 1 then
 	return
 end
 
-local formats = { "auto", "ascii", "b64", "bin", "dec", "hex", "oct" }
+local formats = { "auto", "ascii", "b64", "bin", "dec", "hex", "oct", "morse" }
 
 vim.api.nvim_create_user_command("Convy", function(opts)
 	local args = vim.split(opts.args, "%s+")

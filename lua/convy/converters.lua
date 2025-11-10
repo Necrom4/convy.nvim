@@ -2,12 +2,74 @@ local M = {}
 
 local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
+local morse_chars = {
+	["A"] = ".-",
+	["B"] = "-...",
+	["C"] = "-.-.",
+	["D"] = "-..",
+	["E"] = ".",
+	["F"] = "..-.",
+	["G"] = "--.",
+	["H"] = "....",
+	["I"] = "..",
+	["J"] = ".---",
+	["K"] = "-.-",
+	["L"] = ".-..",
+	["M"] = "--",
+	["N"] = "-.",
+	["O"] = "---",
+	["P"] = ".--.",
+	["Q"] = "--.-",
+	["R"] = ".-.",
+	["S"] = "...",
+	["T"] = "-",
+	["U"] = "..-",
+	["V"] = "...-",
+	["W"] = ".--",
+	["X"] = "-..-",
+	["Y"] = "-.--",
+	["Z"] = "--..",
+	["0"] = "-----",
+	["1"] = ".----",
+	["2"] = "..---",
+	["3"] = "...--",
+	["4"] = "....-",
+	["5"] = ".....",
+	["6"] = "-....",
+	["7"] = "--...",
+	["8"] = "---..",
+	["9"] = "----.",
+	["."] = ".-.-.-",
+	[","] = "--..--",
+	["?"] = "..--..",
+	["'"] = ".----.",
+	["!"] = "-.-.--",
+	["/"] = "-..-.",
+	["("] = "-.--.",
+	[")"] = "-.--.-",
+	["&"] = ".-...",
+	[":"] = "---...",
+	[";"] = "-.-.-.",
+	["="] = "-...-",
+	["+"] = ".-.-.",
+	["-"] = "-....-",
+	["_"] = "..--.-",
+	['"'] = ".-..-.",
+	["$"] = "...-..-",
+	["@"] = ".--.-.",
+}
+
+local morse_chars_r = {}
+for k, v in pairs(morse_chars) do
+	morse_chars_r[v] = k
+end
+
 local function encode_b64(text)
 	local result = ""
 
 	for i = 1, #text, 3 do
 		local b1, b2, b3 = text:byte(i), text:byte(i + 1), text:byte(i + 2)
-		local n = b1 * 65536 + (b2 or 0) * 256 + (b3 or 0)
+		local n = (b1 or 0) * 65536 + (b2 or 0) * 256 + (b3 or 0)
 
 		local c1 = math.floor(n / 262144) % 64
 		local c2 = math.floor(n / 4096) % 64
@@ -69,6 +131,46 @@ local function decode_b64(text)
 	return result
 end
 
+local function morse_to_text(morse)
+	local parts = {}
+	morse = morse:gsub("|", " / ")
+	morse = morse:match("^%s*(.-)%s*$") or morse
+
+	for token in morse:gmatch("[^%s]+") do
+		if token == "/" then
+			table.insert(parts, " ")
+		else
+			local ch = morse_chars_r[token]
+			if ch then
+				table.insert(parts, ch)
+			else
+				table.insert(parts, "?")
+			end
+		end
+	end
+
+	return table.concat(parts)
+end
+
+local function text_to_morse(text)
+	local out = {}
+	for word in text:gmatch("%S+") do
+		local letters = {}
+		for i = 1, #word do
+			local ch = word:sub(i, i)
+			local up = ch:upper()
+			local m = morse_chars[up]
+			if m then
+				table.insert(letters, m)
+			else
+				table.insert(letters, "?")
+			end
+		end
+		table.insert(out, table.concat(letters, " "))
+	end
+	return table.concat(out, " / ")
+end
+
 local function parse_input(text, input_format)
 	local numbers = {}
 
@@ -97,8 +199,13 @@ local function parse_input(text, input_format)
 		for i = 1, #decoded do
 			table.insert(numbers, decoded:byte(i))
 		end
+	elseif input_format == "morse" then
+		local decoded_text = morse_to_text(text)
+		for i = 1, #decoded_text do
+			table.insert(numbers, decoded_text:byte(i))
+		end
 	else
-		error("Unknown input format: " .. input_format)
+		error("Unknown input format: " .. tostring(input_format))
 	end
 
 	return numbers
@@ -153,8 +260,14 @@ local function format_output(numbers, output_format)
 			text = text .. string.char(num)
 		end
 		return encode_b64(text)
+	elseif output_format == "morse" then
+		local text = ""
+		for _, num in ipairs(numbers) do
+			text = text .. string.char(num)
+		end
+		return text_to_morse(text)
 	else
-		error("Unknown output format: " .. output_format)
+		error("Unknown output format: " .. tostring(output_format))
 	end
 end
 
