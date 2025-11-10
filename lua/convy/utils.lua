@@ -1,7 +1,7 @@
 local M = {}
 
 function M.separator(sep)
-	local convy = require("convy.init")
+	local convy = require("convy")
 	convy.config.separator = sep
 	convy.setup(convy.config)
 	vim.notify("Convy separator changed to: " .. sep)

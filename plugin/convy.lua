@@ -11,11 +11,11 @@ vim.api.nvim_create_user_command("Convy", function(opts)
 	local output_format = args[2]
 
 	if not input_format or not output_format then
-		require("convy.init").show_selector(opts.range > 0)
+		require("convy").show_selector(opts.range > 0)
 		return
 	end
 
-	require("convy.init").convert(input_format, output_format, opts.range > 0)
+	require("convy").convert(input_format, output_format, opts.range > 0)
 end, {
 	nargs = "*",
 	range = true,

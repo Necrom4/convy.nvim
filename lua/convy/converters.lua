@@ -212,7 +212,7 @@ local function parse_input(text, input_format)
 end
 
 local function format_output(numbers, output_format)
-	local config = require("convy.init").config
+	local config = require("convy").config
 	local results = {}
 
 	if output_format == "ascii" then

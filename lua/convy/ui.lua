@@ -14,7 +14,7 @@ local function create_float_win(width, height, title)
 	local col = math.floor((win_width - width) / 2)
 	local row = math.floor((win_height - height) / 2)
 
-	local config_w = require("convy.init").config.window
+	local config_w = require("convy").config.window
 
 	local opts = {
 		relative = "editor",
