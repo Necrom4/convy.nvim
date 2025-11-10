@@ -1,5 +1,4 @@
 local M = {}
-local config = require("convy.init").config
 
 local function create_float_win(width, height, title)
 	local buf = vim.api.nvim_create_buf(false, true)
@@ -15,6 +14,8 @@ local function create_float_win(width, height, title)
 	local col = math.floor((win_width - width) / 2)
 	local row = math.floor((win_height - height) / 2)
 
+	local config_w = require("convy.init").config.window
+
 	local opts = {
 		relative = "editor",
 		width = width,
@@ -22,14 +23,14 @@ local function create_float_win(width, height, title)
 		col = col,
 		row = row,
 		style = "minimal",
-		border = "rounded",
+		border = config_w.border,
 		title = title,
 		title_pos = "center",
 	}
 
 	local win = vim.api.nvim_open_win(buf, true, opts)
 
-	vim.wo[win].winblend = config.window.blend
+	vim.wo[win].winblend = config_w.blend
 	vim.wo[win].cursorline = false
 
 	return buf, win

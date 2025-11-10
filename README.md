@@ -31,6 +31,7 @@ A powerful Neovim plugin to convert between various formats
     separator = " ",
     window = {
       blend = 25,
+      border = "rounded"
     },
   },
   keys = {

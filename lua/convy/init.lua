@@ -7,6 +7,7 @@ M.config = {
 	separator = " ",
 	window = {
 		blend = 25,
+		border = "rounded",
 	},
 }
 
