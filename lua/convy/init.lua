@@ -54,7 +54,10 @@ function M.convert(input_format, output_format, use_visual)
 	utils.replace_text(start_pos, end_pos, result)
 
 	if M.config.notifications then
-		vim.notify(string.format("Converted from %s to %s", input_format, output_format), vim.log.levels.INFO)
+		vim.notify(
+			string.format("Converted from %s to %s", string.upper(input_format), string.upper(output_format)),
+			vim.log.levels.INFO
+		)
 	end
 end
 
