@@ -83,7 +83,7 @@ lua require("convy").show_selector() -- open interactive selection window
 ```
 
 ```lua
-lua require("convy.utils").separator(", ") -- sets the separator to `, `
+lua require("convy.utils").set_separator(", ") -- sets the separator to `, `
 ```
 
 **Examples:**

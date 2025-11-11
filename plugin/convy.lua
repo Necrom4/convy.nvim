@@ -43,7 +43,7 @@ end, {
 })
 
 vim.api.nvim_create_user_command("ConvySeparator", function(opts)
-	local f_separator = require("convy.utils").separator
+	local set_separator = require("convy.utils").set_separator
 
 	local function clean_input(str)
 		str = vim.trim(str or "")
@@ -59,15 +59,15 @@ vim.api.nvim_create_user_command("ConvySeparator", function(opts)
 	end
 
 	if not opts.args then
-		f_separator(" ")
+		set_separator(" ")
 		return
 	elseif opts.range > 0 then
 		local text = require("convy.utils").get_visual_selection()
-		f_separator(text)
+		set_separator(text)
 		return
 	end
 
-	f_separator(clean_input(opts.args))
+	set_separator(clean_input(opts.args))
 end, {
 	nargs = "*",
 	range = true,
