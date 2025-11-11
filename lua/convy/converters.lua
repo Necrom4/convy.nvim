@@ -136,7 +136,7 @@ local function morse_to_text(morse)
 	morse = morse:gsub("|", " / ")
 	morse = morse:match("^%s*(.-)%s*$") or morse
 
-	for token in morse:gmatch("[^%s]+") do
+	for token in morse:gmatch("%S+") do
 		if token == "/" then
 			table.insert(parts, " ")
 		else

@@ -1,5 +1,16 @@
 local M = {}
 
+function M.notify(msg, level, opts)
+	if not require("convy").config.notifications then
+		return
+	end
+
+	opts = opts or {}
+	opts.title = opts.title or "Convy"
+
+	vim.notify(msg, level or vim.log.levels.INFO, opts)
+end
+
 function M.set_separator(sep)
 	require("convy").config.separator = sep
 	vim.notify("Convy separator changed to: " .. sep)

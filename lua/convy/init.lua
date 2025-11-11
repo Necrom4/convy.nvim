@@ -34,7 +34,7 @@ function M.convert(input_format, output_format, use_visual)
 	end
 
 	if not text or text == "" then
-		vim.notify("No text to convert", vim.log.levels.WARN)
+		utils.notify("No text to convert", vim.log.levels.WARN)
 		return
 	end
 
@@ -46,19 +46,17 @@ function M.convert(input_format, output_format, use_visual)
 	local success, result = pcall(converters.convert, text, input_format, output_format)
 
 	if not success then
-		vim.notify(string.format("Conversion failed: %s", result), vim.log.levels.ERROR)
+		utils.notify(string.format("Conversion failed: %s", result), vim.log.levels.ERROR)
 		return
 	end
 
 	-- Replace the text in buffer
 	utils.replace_text(start_pos, end_pos, result)
 
-	if M.config.notifications then
-		vim.notify(
-			string.format("Converted from %s to %s", string.upper(input_format), string.upper(output_format)),
-			vim.log.levels.INFO
-		)
-	end
+	utils.notify(
+		string.format("Converted from %s to %s", input_format:upper(), output_format:upper()),
+		vim.log.levels.INFO
+	)
 end
 
 -- Show interactive selector for conversion formats
