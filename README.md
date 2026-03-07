@@ -120,10 +120,10 @@ lua require("convy.utils").set_separator(", ") -- sets the separator to `, `
 ## 🏆 Roadmap
 
 - [ ] Drop visual-mode flag for util.function that guesses if we executed Convy in visual mode
-- [ ] Support for more formats
-  - [ ] Colors (RGB, HSL, ...)
-  - [ ] Sizes (px, mm, in, ...)
-  - [ ] Temperatures (C, F, ...)
+- [x] Support for more formats
+  - [x] Colors (RGB, HSL, ...)
+  - [x] Sizes (px, mm, in, ...)
+  - [x] Temperatures (C, F, ...)
 - [x] Interactive UI for selecting input/output formats
 - [x] Tab completion for conversion formats
 - [x] Automatic format detection
