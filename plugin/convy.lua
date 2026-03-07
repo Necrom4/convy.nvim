@@ -3,14 +3,17 @@ if vim.fn.has("nvim-0.8.0") ~= 1 then
 	return
 end
 
-local formats = { "auto", "ascii", "b64", "bin", "dec", "hex", "oct", "morse" }
-
 vim.api.nvim_create_user_command("Convy", function(opts)
 	local args = vim.split(opts.args, "%s+")
 	local input_format = args[1]
 	local output_format = args[2]
 
-	if not input_format or not output_format then
+	if not input_format or input_format == "" then
+		require("convy").show_selector(opts.range > 0)
+		return
+	end
+
+	if not output_format or output_format == "" then
 		require("convy").show_selector(opts.range > 0)
 		return
 	end
@@ -21,6 +24,8 @@ end, {
 	range = true,
 	complete = function(arg_lead, cmd_line, cursor_pos)
 		-- Parse command line to see which argument we're completing
+		local formats_mod = require("convy.formats")
+
 		local args = vim.split(cmd_line, "%s+", { trimempty = true })
 		local num_args = #args
 
@@ -31,10 +36,23 @@ end, {
 		end
 
 		-- Complete from the formats list
+		local completions = {}
+
+		if num_args <= 2 then
+			completions = formats_mod.get_all_input_formats()
+		else
+			local input_format = args[2]
+			if input_format == "auto" then
+				completions = formats_mod.get_output_formats("auto")
+			else
+				completions = formats_mod.get_output_formats(input_format)
+			end
+		end
+
 		local matches = {}
-		for _, format in ipairs(formats) do
-			if format:find(arg_lead, 1, true) == 1 then
-				table.insert(matches, format)
+		for _, fmt in ipairs(completions) do
+			if fmt:find(arg_lead, 1, true) == 1 then
+				table.insert(matches, fmt)
 			end
 		end
 		return matches

@@ -58,7 +58,7 @@ function M.get_word_under_cursor()
 
 	-- Define word boundary characters (alphanumeric, underscore, and hex-related)
 	local function is_word_char(char)
-		return char:match("[%w_]") ~= nil or char == "x" or char == "b" or char == "o"
+		return char:match("[%w_%.%%%°#%(%)%-]") ~= nil
 	end
 
 	-- If cursor is on a space or boundary, return nothing
@@ -72,7 +72,7 @@ function M.get_word_under_cursor()
 	while start_col > 1 do
 		local prev_char = line_text:sub(start_col - 1, start_col - 1)
 		-- Stop at delimiters
-		if not is_word_char(prev_char) or prev_char:match("[%[%]%(%)%{%},;]") then
+		if not is_word_char(prev_char) or prev_char:match("[%[%]%{%};]") then
 			break
 		end
 		start_col = start_col - 1
@@ -83,7 +83,7 @@ function M.get_word_under_cursor()
 	while end_col <= #line_text do
 		local next_char = line_text:sub(end_col + 1, end_col + 1)
 		-- Stop at delimiters
-		if next_char == "" or not is_word_char(next_char) or next_char:match("[%[%]%(%)%{%},;]") then
+		if next_char == "" or not is_word_char(next_char) or next_char:match("[%[%]%{%};]") then
 			break
 		end
 		end_col = end_col + 1
@@ -128,32 +128,175 @@ end
 -- Auto-detect input format
 function M.detect_format(text)
 	-- Remove whitespace for detection
-	local clean_text = text:gsub("%s", "")
+	local clean = text:match("^%s*(.-)%s*$") or text
+	local no_spaces = text:gsub("%s", "")
 
-	if clean_text:match("^0b[01]+") then
+	-- ── Color formats ──────────────────────────────────────────────
+
+	if clean:match("^hsl%s*%(") then
+		return "hsl"
+	end
+
+	if clean:match("^rgb%s*%(") then
+		return "rgb"
+	end
+
+	if clean:match("^#%x%x%x%x%x%x$") or clean:match("^#%x%x%x$") then
+		return "hex_color"
+	end
+
+	local color_mod = require("convy.converters.color")
+	if color_mod.is_tailwind_color(clean) then
+		return "tailwind"
+	end
+
+	-- ── Temperature formats ────────────────────────────────────────
+
+	local no_degree = clean:gsub("°", "")
+
+	if no_degree:match("^%-?[%d%.]+K$") then
+		return "kelvin"
+	end
+
+	if no_degree:match("^%-?[%d%.]+F$") then
+		return "fahrenheit"
+	end
+
+	if no_degree:match("^%-?[%d%.]+C$") then
+		return "celsius"
+	end
+
+	-- ── Angle formats ──────────────────────────────────────────────
+
+	if clean:match("^%-?[%d%.]+turn$") then
+		return "turn"
+	end
+
+	if clean:match("^%-?[%d%.]+grad$") then
+		return "grad"
+	end
+
+	if clean:match("^%-?[%d%.]+rad$") then
+		return "rad"
+	end
+
+	if clean:match("^%-?[%d%.]+deg$") then
+		return "deg"
+	end
+
+	-- ── Time formats ───────────────────────────────────────────────
+
+	-- Must check "min" before "m" (length) and "ms" before "m"
+	if clean:match("^[%d%.]+ms$") then
+		return "ms"
+	end
+
+	if clean:match("^[%d%.]+min$") then
+		return "min"
+	end
+
+	if clean:match("^[%d%.]+h$") then
+		return "h"
+	end
+
+	if clean:match("^[%d%.]+s$") then
+		return "s"
+	end
+
+	-- ── Data size formats ──────────────────────────────────────────
+
+	if clean:match("^[%d%.]+TB$") then
+		return "TB"
+	end
+
+	if clean:match("^[%d%.]+GB$") then
+		return "GB"
+	end
+
+	if clean:match("^[%d%.]+MB$") then
+		return "MB"
+	end
+
+	if clean:match("^[%d%.]+KB$") then
+		return "KB"
+	end
+
+	if clean:match("^[%d%.]+B$") then
+		return "B"
+	end
+
+	-- ── Length formats ─────────────────────────────────────────────
+
+	if clean:match("^%-?[%d%.]+px$") then
+		return "px"
+	end
+
+	if clean:match("^%-?[%d%.]+rem$") then
+		return "rem"
+	end
+
+	if clean:match("^%-?[%d%.]+pt$") then
+		return "pt"
+	end
+
+	if clean:match("^%-?[%d%.]+km$") then
+		return "km"
+	end
+
+	if clean:match("^%-?[%d%.]+cm$") then
+		return "cm"
+	end
+
+	if clean:match("^%-?[%d%.]+mm$") then
+		return "mm"
+	end
+
+	if clean:match("^%-?[%d%.]+m$") then
+		return "m"
+	end
+
+	if clean:match("^%-?[%d%.]+mi$") then
+		return "mi"
+	end
+
+	if clean:match("^%-?[%d%.]+yd$") then
+		return "yd"
+	end
+
+	if clean:match("^%-?[%d%.]+ft$") then
+		return "ft"
+	end
+
+	if clean:match("^%-?[%d%.]+in$") then
+		return "in"
+	end
+
+	-- ── Text encoding formats (original detection logic) ───────────
+
+	if no_spaces:match("^0b[01]+") then
 		return "bin"
 	end
 
-	if clean_text:match("^[0-9,]+$") or clean_text:match("^[0-9]+$") then
+	if no_spaces:match("^[0-9,]+$") or no_spaces:match("^[0-9]+$") then
 		return "dec"
 	end
 
-	if clean_text:match("^0x[0-9a-fA-F]+") then
+	if no_spaces:match("^0x[0-9a-fA-F]+") then
 		return "hex"
 	end
 
-	if clean_text:match("^[0-9a-fA-F]+$") and clean_text:match("[a-fA-F]") then
+	if no_spaces:match("^[0-9a-fA-F]+$") and no_spaces:match("[a-fA-F]") then
 		return "hex"
 	end
 
-	if clean_text:match("^0o[0-7]+") then
+	if no_spaces:match("^0o[0-7]+") then
 		return "oct"
 	end
 
 	if
-		#clean_text >= 8
-		and clean_text:match("^[A-Za-z0-9+/]+=*$")
-		and (clean_text:match("[A-Z]") and clean_text:match("[a-z]") or clean_text:match("[+/]"))
+		#no_spaces >= 8
+		and no_spaces:match("^[A-Za-z0-9+/]+=*$")
+		and (no_spaces:match("[A-Z]") and no_spaces:match("[a-z]") or no_spaces:match("[+/]"))
 	then
 		return "b64"
 	end
