@@ -105,14 +105,15 @@ local function calc_column_widths(columns)
 	return widths
 end
 
-local function render_step1(buf, columns, col_widths, cursor_on_auto, cursor_col, cursor_row, content_width)
+local function render_input_window(buf, columns, col_widths, cursor_on_auto, cursor_col, cursor_row, content_width)
 	local col_gap = 2
 	local left_pad = 2
 
 	local lines = {}
 	local highlights = {}
 
-	table.insert(lines, "")
+	table.insert(lines, "  Select INPUT format")
+	table.insert(highlights, { line = 0, hl = "Title" })
 
 	local auto_label = "AUTO"
 	local prefix = cursor_on_auto and "▶ " or ""
@@ -132,7 +133,6 @@ local function render_step1(buf, columns, col_widths, cursor_on_auto, cursor_col
 			table.insert(highlights, { line = line_idx, hl = "Identifier", col_start = start_byte, col_end = end_byte })
 		end
 	end
-
 	table.insert(lines, "")
 
 	local max_items = 0
@@ -229,15 +229,14 @@ local function render_step1(buf, columns, col_widths, cursor_on_auto, cursor_col
 	end
 end
 
-local function render_step2(buf, output_formats, input_format, cursor_row)
+local function render_output_window(buf, output_formats, input_format, cursor_row)
 	local lines = {}
 	local highlights = {}
 
-	table.insert(lines, "")
-	table.insert(lines, "  Select OUTPUT format:")
-	table.insert(highlights, { line = 1, hl = "Title" })
+	table.insert(lines, "  Select OUTPUT format")
+	table.insert(highlights, { line = 0, hl = "Title" })
 	table.insert(lines, string.format("  (Input: %s)", input_format))
-	table.insert(highlights, { line = 2, hl = "Comment" })
+	table.insert(highlights, { line = 1, hl = "Comment" })
 	table.insert(lines, "")
 
 	for i, format in ipairs(output_formats) do
@@ -302,16 +301,16 @@ function M.show_format_selector(callback, source_text)
 			max_items = #col.items
 		end
 	end
-	local total_height = 3 + 1 + 1 + 2 + max_items
+	local total_height = 3 + 1 + 1 + 2 + max_items + 1
 
 	local function render()
 		vim.bo[buf].modifiable = true
 
 		if state.step == 1 then
 			local on_auto = (state.col == 0)
-			render_step1(buf, columns, col_widths, on_auto, state.col, state.row, content_width)
+			render_input_window(buf, columns, col_widths, on_auto, state.col, state.row, content_width)
 		else
-			render_step2(buf, state.output_formats, state.input_format, state.cursor)
+			render_output_window(buf, state.output_formats, state.input_format, state.cursor)
 		end
 
 		vim.bo[buf].modifiable = false
