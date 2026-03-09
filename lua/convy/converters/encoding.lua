@@ -1,6 +1,81 @@
 local M = {}
 
+------------
+-- BASE64 --
+------------
+
 local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+local function encode_b64(text)
+	local result = ""
+
+	for i = 1, #text, 3 do
+		local b1, b2, b3 = text:byte(i), text:byte(i + 1), text:byte(i + 2)
+		local n = (b1 or 0) * 65536 + (b2 or 0) * 256 + (b3 or 0)
+
+		local c1 = math.floor(n / 262144) % 64
+		local c2 = math.floor(n / 4096) % 64
+		local c3 = math.floor(n / 64) % 64
+		local c4 = n % 64
+
+		result = result .. b64chars:sub(c1 + 1, c1 + 1) .. b64chars:sub(c2 + 1, c2 + 1)
+
+		if b2 then
+			result = result .. b64chars:sub(c3 + 1, c3 + 1)
+		else
+			result = result .. "="
+		end
+
+		if b3 then
+			result = result .. b64chars:sub(c4 + 1, c4 + 1)
+		else
+			result = result .. "="
+		end
+	end
+
+	return result
+end
+
+local function decode_b64(text)
+	-- Remove whitespace
+	text = text:gsub("%s", "")
+
+	-- Build reverse lookup table
+	local b64lookup = {}
+	for i = 1, #b64chars do
+		b64lookup[b64chars:sub(i, i)] = i - 1
+	end
+
+	local result = ""
+
+	for i = 1, #text, 4 do
+		local c1 = b64lookup[text:sub(i, i)] or 0
+		local c2 = b64lookup[text:sub(i + 1, i + 1)] or 0
+		local c3 = b64lookup[text:sub(i + 2, i + 2)] or 0
+		local c4 = b64lookup[text:sub(i + 3, i + 3)] or 0
+
+		local n = c1 * 262144 + c2 * 4096 + c3 * 64 + c4
+
+		local b1 = math.floor(n / 65536) % 256
+		result = result .. string.char(b1)
+
+		if text:sub(i + 2, i + 2) ~= "=" then
+			local b2 = math.floor(n / 256) % 256
+			result = result .. string.char(b2)
+		end
+
+		if text:sub(i + 3, i + 3) ~= "=" then
+			local b3 = n % 256
+			result = result .. string.char(b3)
+		end
+	end
+
+	return result
+end
+
+-----------
+-- MORSE --
+-----------
 
 local morse_chars = {
 	["A"] = ".-",
@@ -63,6 +138,50 @@ local morse_chars_r = {}
 for k, v in pairs(morse_chars) do
 	morse_chars_r[v] = k
 end
+
+local function morse_to_text(morse)
+	local parts = {}
+	morse = morse:gsub("|", " / ")
+	morse = morse:match("^%s*(.-)%s*$") or morse
+
+	for token in morse:gmatch("%S+") do
+		if token == "/" then
+			table.insert(parts, " ")
+		else
+			local ch = morse_chars_r[token]
+			if ch then
+				table.insert(parts, ch)
+			else
+				table.insert(parts, "?")
+			end
+		end
+	end
+
+	return table.concat(parts)
+end
+
+local function text_to_morse(text)
+	local out = {}
+	for word in text:gmatch("%S+") do
+		local letters = {}
+		for i = 1, #word do
+			local ch = word:sub(i, i)
+			local up = ch:upper()
+			local m = morse_chars[up]
+			if m then
+				table.insert(letters, m)
+			else
+				table.insert(letters, "?")
+			end
+		end
+		table.insert(out, table.concat(letters, " "))
+	end
+	return table.concat(out, " / ")
+end
+
+----------
+-- HASH --
+----------
 
 local band = bit.band
 local bor = bit.bor
@@ -132,113 +251,6 @@ local function sha256(msg)
 	end
 
 	return string.format("%08x%08x%08x%08x%08x%08x%08x%08x", h0, h1, h2, h3, h4, h5, h6, h7)
-end
-
-local function encode_b64(text)
-	local result = ""
-
-	for i = 1, #text, 3 do
-		local b1, b2, b3 = text:byte(i), text:byte(i + 1), text:byte(i + 2)
-		local n = (b1 or 0) * 65536 + (b2 or 0) * 256 + (b3 or 0)
-
-		local c1 = math.floor(n / 262144) % 64
-		local c2 = math.floor(n / 4096) % 64
-		local c3 = math.floor(n / 64) % 64
-		local c4 = n % 64
-
-		result = result .. b64chars:sub(c1 + 1, c1 + 1) .. b64chars:sub(c2 + 1, c2 + 1)
-
-		if b2 then
-			result = result .. b64chars:sub(c3 + 1, c3 + 1)
-		else
-			result = result .. "="
-		end
-
-		if b3 then
-			result = result .. b64chars:sub(c4 + 1, c4 + 1)
-		else
-			result = result .. "="
-		end
-	end
-
-	return result
-end
-
-local function decode_b64(text)
-	-- Remove whitespace
-	text = text:gsub("%s", "")
-
-	-- Build reverse lookup table
-	local b64lookup = {}
-	for i = 1, #b64chars do
-		b64lookup[b64chars:sub(i, i)] = i - 1
-	end
-
-	local result = ""
-
-	for i = 1, #text, 4 do
-		local c1 = b64lookup[text:sub(i, i)] or 0
-		local c2 = b64lookup[text:sub(i + 1, i + 1)] or 0
-		local c3 = b64lookup[text:sub(i + 2, i + 2)] or 0
-		local c4 = b64lookup[text:sub(i + 3, i + 3)] or 0
-
-		local n = c1 * 262144 + c2 * 4096 + c3 * 64 + c4
-
-		local b1 = math.floor(n / 65536) % 256
-		result = result .. string.char(b1)
-
-		if text:sub(i + 2, i + 2) ~= "=" then
-			local b2 = math.floor(n / 256) % 256
-			result = result .. string.char(b2)
-		end
-
-		if text:sub(i + 3, i + 3) ~= "=" then
-			local b3 = n % 256
-			result = result .. string.char(b3)
-		end
-	end
-
-	return result
-end
-
-local function morse_to_text(morse)
-	local parts = {}
-	morse = morse:gsub("|", " / ")
-	morse = morse:match("^%s*(.-)%s*$") or morse
-
-	for token in morse:gmatch("%S+") do
-		if token == "/" then
-			table.insert(parts, " ")
-		else
-			local ch = morse_chars_r[token]
-			if ch then
-				table.insert(parts, ch)
-			else
-				table.insert(parts, "?")
-			end
-		end
-	end
-
-	return table.concat(parts)
-end
-
-local function text_to_morse(text)
-	local out = {}
-	for word in text:gmatch("%S+") do
-		local letters = {}
-		for i = 1, #word do
-			local ch = word:sub(i, i)
-			local up = ch:upper()
-			local m = morse_chars[up]
-			if m then
-				table.insert(letters, m)
-			else
-				table.insert(letters, "?")
-			end
-		end
-		table.insert(out, table.concat(letters, " "))
-	end
-	return table.concat(out, " / ")
 end
 
 local function parse_input(text, input_format)
