@@ -17,17 +17,17 @@ local function parse_angle(text, input_format)
 
 	local num_str = clean:match("^([%-]?[%d%.]+)")
 	if not num_str then
-		error("Could not parse angle value from: " .. text)
+		error("Could not parse angle value from: " .. text, 0)
 	end
 
 	local value = tonumber(num_str)
 	if not value then
-		error("Invalid numeric value: " .. num_str)
+		error("Invalid numeric value: " .. num_str, 0)
 	end
 
 	local factor = to_degrees[input_format]
 	if not factor then
-		error("Unknown angle format: " .. tostring(input_format))
+		error("Unknown angle format: " .. tostring(input_format), 0)
 	end
 
 	return value * factor
@@ -37,7 +37,7 @@ end
 local function format_angle(degrees, output_format, include_suffix)
 	local factor = to_degrees[output_format]
 	if not factor then
-		error("Unknown angle format: " .. tostring(output_format))
+		error("Unknown angle format: " .. tostring(output_format), 0)
 	end
 
 	local value = degrees / factor

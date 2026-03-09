@@ -15,12 +15,12 @@ local group_modules = {
 function M.convert(text, input_format, output_format)
 	local group = formats.get_group(input_format)
 	if not group then
-		error("Unknown input format: " .. tostring(input_format))
+		error("Unknown input format: " .. tostring(input_format), 0)
 	end
 
 	local out_group = formats.get_group(output_format)
 	if not out_group then
-		error("Unknown output format: " .. tostring(output_format))
+		error("Unknown output format: " .. tostring(output_format), 0)
 	end
 
 	if group ~= out_group then
@@ -37,7 +37,7 @@ function M.convert(text, input_format, output_format)
 
 	local module_path = group_modules[group]
 	if not module_path then
-		error("No converter module for group: " .. tostring(group))
+		error("No converter module for group: " .. tostring(group), 0)
 	end
 
 	return require(module_path).convert(text, input_format, output_format)

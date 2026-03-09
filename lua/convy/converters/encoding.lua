@@ -277,7 +277,7 @@ local function parse_input(text, input_format)
 			table.insert(numbers, decoded_text:byte(i))
 		end
 	else
-		error("Unknown input format: " .. tostring(input_format))
+		error("Unknown input format: " .. tostring(input_format), 0)
 	end
 
 	return numbers
@@ -345,7 +345,7 @@ local function format_output(numbers, output_format)
 		end
 		return text_to_morse(text)
 	else
-		error("Unknown output format: " .. tostring(output_format))
+		error("Unknown output format: " .. tostring(output_format), 0)
 	end
 end
 
@@ -353,7 +353,7 @@ function M.convert(text, input_format, output_format)
 	local numbers = parse_input(text, input_format)
 
 	if #numbers == 0 then
-		error("No valid numbers found in input")
+		error("No valid numbers found in input", 0)
 	end
 
 	return format_output(numbers, output_format)

@@ -30,12 +30,12 @@ local function parse_length(text, input_format)
 
 	local num_str = clean:match("^([%-]?[%d%.]+)")
 	if not num_str then
-		error("Could not parse length value from: " .. text)
+		error("Could not parse length value from: " .. text, 0)
 	end
 
 	local value = tonumber(num_str)
 	if not value then
-		error("Invalid numeric value: " .. num_str)
+		error("Invalid numeric value: " .. num_str, 0)
 	end
 
 	local factor
@@ -46,7 +46,7 @@ local function parse_length(text, input_format)
 	end
 
 	if not factor then
-		error("Unknown length format: " .. tostring(input_format))
+		error("Unknown length format: " .. tostring(input_format), 0)
 	end
 
 	return value * factor
@@ -61,7 +61,7 @@ local function format_length(meters, output_format, include_suffix)
 	end
 
 	if not factor then
-		error("Unknown length format: " .. tostring(output_format))
+		error("Unknown length format: " .. tostring(output_format), 0)
 	end
 
 	local value = meters / factor

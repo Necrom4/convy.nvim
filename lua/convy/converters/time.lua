@@ -17,17 +17,17 @@ local function parse_time(text, input_format)
 
 	local num_str = clean:match("^([%d%.]+)")
 	if not num_str then
-		error("Could not parse time value from: " .. text)
+		error("Could not parse time value from: " .. text, 0)
 	end
 
 	local value = tonumber(num_str)
 	if not value then
-		error("Invalid numeric value: " .. num_str)
+		error("Invalid numeric value: " .. num_str, 0)
 	end
 
 	local factor = to_seconds[input_format]
 	if not factor then
-		error("Unknown time format: " .. tostring(input_format))
+		error("Unknown time format: " .. tostring(input_format), 0)
 	end
 
 	return value * factor
@@ -36,7 +36,7 @@ end
 local function format_time(seconds, output_format, include_suffix)
 	local factor = to_seconds[output_format]
 	if not factor then
-		error("Unknown time format: " .. tostring(output_format))
+		error("Unknown time format: " .. tostring(output_format), 0)
 	end
 
 	local value = seconds / factor

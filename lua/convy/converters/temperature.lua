@@ -24,12 +24,12 @@ local function parse_temperature(text, input_format)
 
 	local num_str = clean:match("^([%-]?[%d%.]+)")
 	if not num_str then
-		error("Could not parse temperature value from: " .. text)
+		error("Could not parse temperature value from: " .. text, 0)
 	end
 
 	local value = tonumber(num_str)
 	if not value then
-		error("Invalid numeric value: " .. num_str)
+		error("Invalid numeric value: " .. num_str, 0)
 	end
 
 	if input_format == "celsius" then
@@ -39,7 +39,7 @@ local function parse_temperature(text, input_format)
 	elseif input_format == "kelvin" then
 		return value - 273.15
 	else
-		error("Unknown temperature format: " .. tostring(input_format))
+		error("Unknown temperature format: " .. tostring(input_format), 0)
 	end
 end
 
@@ -53,7 +53,7 @@ local function format_temperature(celsius, output_format, suffix_style)
 	elseif output_format == "kelvin" then
 		value = celsius + 273.15
 	else
-		error("Unknown temperature format: " .. tostring(output_format))
+		error("Unknown temperature format: " .. tostring(output_format), 0)
 	end
 
 	local formatted

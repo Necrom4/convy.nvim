@@ -217,7 +217,7 @@ local function parse_color(text, input_format)
 	if input_format == "hex_color" then
 		local hex = clean:match("^#(%x+)$") or clean:match("^(%x+)$")
 		if not hex then
-			error("Invalid hex color: " .. text)
+			error("Invalid hex color: " .. text, 0)
 		end
 
 		if #hex == 3 then
@@ -228,7 +228,7 @@ local function parse_color(text, input_format)
 		end
 
 		if #hex ~= 6 then
-			error("Invalid hex color length: " .. text)
+			error("Invalid hex color length: " .. text, 0)
 		end
 
 		local r = tonumber(hex:sub(1, 2), 16)
@@ -241,7 +241,7 @@ local function parse_color(text, input_format)
 			r_s, g_s, b_s = clean:match("^(%d+)%s*,%s*(%d+)%s*,%s*(%d+)$")
 		end
 		if not r_s then
-			error("Invalid RGB color: " .. text)
+			error("Invalid RGB color: " .. text, 0)
 		end
 
 		return tonumber(r_s), tonumber(g_s), tonumber(b_s)
@@ -251,7 +251,7 @@ local function parse_color(text, input_format)
 			h_s, s_s, l_s = clean:match("^(%d+)%s*,%s*(%d+)%%%s*,%s*(%d+)%%$")
 		end
 		if not h_s then
-			error("Invalid HSL color: " .. text)
+			error("Invalid HSL color: " .. text, 0)
 		end
 
 		local h = tonumber(h_s)
@@ -263,12 +263,12 @@ local function parse_color(text, input_format)
 		local name = clean:lower()
 		local rgb = tailwind_palette[name]
 		if not rgb then
-			error("Unknown Tailwind color: " .. text)
+			error("Unknown Tailwind color: " .. text, 0)
 		end
 
 		return rgb[1], rgb[2], rgb[3]
 	else
-		error("Unknown color format: " .. tostring(input_format))
+		error("Unknown color format: " .. tostring(input_format), 0)
 	end
 end
 
@@ -283,7 +283,7 @@ local function format_color(r, g, b, output_format)
 	elseif output_format == "tailwind" then
 		return nearest_tailwind(r, g, b)
 	else
-		error("Unknown color format: " .. tostring(output_format))
+		error("Unknown color format: " .. tostring(output_format), 0)
 	end
 end
 
