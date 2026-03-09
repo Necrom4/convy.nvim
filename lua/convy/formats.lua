@@ -17,7 +17,7 @@ M.groups = {
 	},
 	encoding = {
 		label = "Encoding",
-		formats = { "ascii", "bin", "dec", "hex", "oct", "b64", "morse" },
+		formats = { "ascii", "bin", "dec", "hex", "oct", "b64", "hash", "morse" },
 	},
 	length = {
 		label = "Length",

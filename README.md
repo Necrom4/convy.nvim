@@ -7,7 +7,7 @@ A powerful Neovim plugin to convert between various formats
 ## ✨ Features
 
 - 🔄 Multiple Formats: from ASCII to binary, Morse and Freedom Units
-  - **Text**: `ascii`, `bin`, `dec`, `hex`, `oct`, `b64`, `morse`
+  - **Text**: `ascii`, `bin`, `dec`, `hex`, `oct`, `b64`, `hash`, `morse`
   - **Data** sizes: `B`, `KB`, `MB`, `GB`, `TB`
   - **Lengths**: `pex`, `rem`, `pt`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`
   - **Colors**: `hex`, `rgb`, `hsl`, `tailwind`
