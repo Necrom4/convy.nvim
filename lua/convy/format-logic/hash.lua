@@ -1,4 +1,3 @@
--- file holds hash-related code for encoding.lua
 local M = {}
 
 local band = bit.band
