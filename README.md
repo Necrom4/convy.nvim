@@ -117,6 +117,93 @@ lua require("convy.utils").set_separator(", ") -- sets the separator to `, `
 " Result: 72 101 108 108 111
 ```
 
+## ⌨ Mapping
+
+```lua
+local map = vim.keymap.set
+
+------------------------------------------------
+-- TEXT
+------------------------------------------------
+
+map({ "n", "x" }, "<leader>cta", "<cmd>Convy auto ascii<cr>",  { desc = "→ ascii" })
+map({ "n", "x" }, "<leader>ctb", "<cmd>Convy auto bin<cr>",    { desc = "→ binary" })
+map({ "n", "x" }, "<leader>ctd", "<cmd>Convy auto dec<cr>",    { desc = "→ decimal" })
+map({ "n", "x" }, "<leader>cth", "<cmd>Convy auto hex<cr>",    { desc = "→ hex" })
+map({ "n", "x" }, "<leader>cto", "<cmd>Convy auto oct<cr>",    { desc = "→ octal" })
+map({ "n", "x" }, "<leader>ct6", "<cmd>Convy auto b64<cr>",    { desc = "→ base64" })
+map({ "n", "x" }, "<leader>ctm", "<cmd>Convy auto md5<cr>",    { desc = "→ md5" })
+map({ "n", "x" }, "<leader>cts", "<cmd>Convy auto sha256<cr>", { desc = "→ sha256" })
+map({ "n", "x" }, "<leader>ctM", "<cmd>Convy auto morse<cr>",  { desc = "→ morse" })
+
+
+------------------------------------------------
+-- DATA SIZE
+------------------------------------------------
+
+map({ "n", "x" }, "<leader>cdB", "<cmd>Convy auto B<cr>",  { desc = "→ B" })
+map({ "n", "x" }, "<leader>cdk", "<cmd>Convy auto KB<cr>", { desc = "→ KB" })
+map({ "n", "x" }, "<leader>cdm", "<cmd>Convy auto MB<cr>", { desc = "→ MB" })
+map({ "n", "x" }, "<leader>cdg", "<cmd>Convy auto GB<cr>", { desc = "→ GB" })
+map({ "n", "x" }, "<leader>cdt", "<cmd>Convy auto TB<cr>", { desc = "→ TB" })
+
+
+------------------------------------------------
+-- LENGTH
+------------------------------------------------
+
+map({ "n", "x" }, "<leader>clp", "<cmd>Convy auto px<cr>",  { desc = "→ px" })
+map({ "n", "x" }, "<leader>clr", "<cmd>Convy auto rem<cr>", { desc = "→ rem" })
+map({ "n", "x" }, "<leader>clt", "<cmd>Convy auto pt<cr>",  { desc = "→ pt" })
+map({ "n", "x" }, "<leader>clm", "<cmd>Convy auto mm<cr>",  { desc = "→ mm" })
+map({ "n", "x" }, "<leader>clc", "<cmd>Convy auto cm<cr>",  { desc = "→ cm" })
+map({ "n", "x" }, "<leader>clM", "<cmd>Convy auto m<cr>",   { desc = "→ m" })
+map({ "n", "x" }, "<leader>clk", "<cmd>Convy auto km<cr>",  { desc = "→ km" })
+map({ "n", "x" }, "<leader>cli", "<cmd>Convy auto in<cr>",  { desc = "→ in" })
+map({ "n", "x" }, "<leader>clf", "<cmd>Convy auto ft<cr>",  { desc = "→ ft" })
+map({ "n", "x" }, "<leader>cly", "<cmd>Convy auto yd<cr>",  { desc = "→ yd" })
+map({ "n", "x" }, "<leader>clI", "<cmd>Convy auto mi<cr>",  { desc = "→ mi" })
+
+
+------------------------------------------------
+-- COLORS
+------------------------------------------------
+
+map({ "n", "x" }, "<leader>cch", "<cmd>Convy auto hex<cr>",      { desc = "→ hex" })
+map({ "n", "x" }, "<leader>ccr", "<cmd>Convy auto rgb<cr>",      { desc = "→ rgb" })
+map({ "n", "x" }, "<leader>ccs", "<cmd>Convy auto hsl<cr>",      { desc = "→ hsl" })
+map({ "n", "x" }, "<leader>cct", "<cmd>Convy auto tailwind<cr>", { desc = "→ tailwind" })
+
+
+------------------------------------------------
+-- TIME
+------------------------------------------------
+
+map({ "n", "x" }, "<leader>cTm", "<cmd>Convy auto ms<cr>",  { desc = "→ ms" })
+map({ "n", "x" }, "<leader>cTs", "<cmd>Convy auto s<cr>",   { desc = "→ s" })
+map({ "n", "x" }, "<leader>cTi", "<cmd>Convy auto min<cr>", { desc = "→ min" })
+map({ "n", "x" }, "<leader>cTh", "<cmd>Convy auto h<cr>",   { desc = "→ h" })
+
+
+------------------------------------------------
+-- ANGLES
+------------------------------------------------
+
+map({ "n", "x" }, "<leader>cad", "<cmd>Convy auto deg<cr>",  { desc = "→ deg" })
+map({ "n", "x" }, "<leader>car", "<cmd>Convy auto rad<cr>",  { desc = "→ rad" })
+map({ "n", "x" }, "<leader>cag", "<cmd>Convy auto grad<cr>", { desc = "→ grad" })
+map({ "n", "x" }, "<leader>cat", "<cmd>Convy auto turn<cr>", { desc = "→ turn" })
+
+
+------------------------------------------------
+-- TEMPERATURE
+------------------------------------------------
+
+map({ "n", "x" }, "<leader>cec", "<cmd>Convy auto celcius<cr>",    { desc = "→ celcius" })
+map({ "n", "x" }, "<leader>cef", "<cmd>Convy auto fahrenheit<cr>", { desc = "→ fahrenheit" })
+map({ "n", "x" }, "<leader>cek", "<cmd>Convy auto kelvin<cr>",     { desc = "→ kelvin" })
+```
+
 ## 🏆 Roadmap
 
 - [ ] Drop visual-mode flag for util.function that guesses if we executed Convy in visual mode
