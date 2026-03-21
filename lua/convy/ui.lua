@@ -506,6 +506,11 @@ function M.show_format_selector(callback, source_text)
 	render()
 	setup_keymaps()
 
+	local on_open = require("convy").config.window.on_open
+	if type(on_open) == "function" then
+		on_open(buf, win)
+	end
+
 	-- Auto-close on leaving window
 	vim.api.nvim_create_autocmd({ "BufLeave", "WinLeave" }, {
 		buffer = buf,

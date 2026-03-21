@@ -10,6 +10,7 @@ M.config = {
 	window = {
 		blend = 25,
 		border = "rounded",
+		on_open = nil,
 	},
 }
 
