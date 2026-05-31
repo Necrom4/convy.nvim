@@ -1,5 +1,7 @@
 local M = {}
 
+local shared = require("convy.converters.shared")
+
 local suffix_letters = {
 	celsius = "C",
 	fahrenheit = "F",
@@ -56,13 +58,7 @@ local function format_temperature(celsius, output_format, suffix_style)
 		error("Unknown temperature format: " .. tostring(output_format), 0)
 	end
 
-	local formatted
-	if value == math.floor(value) then
-		formatted = string.format("%d", value)
-	else
-		formatted = string.format("%.2f", value)
-		formatted = formatted:gsub("0+$", ""):gsub("%.$", "")
-	end
+	local formatted = shared.format_number(value)
 
 	if suffix_style == "degree" then
 		formatted = formatted .. "°" .. suffix_letters[output_format]

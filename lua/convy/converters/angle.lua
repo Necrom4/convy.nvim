@@ -1,5 +1,7 @@
 local M = {}
 
+local shared = require("convy.converters.shared")
+
 local to_degrees = {
 	deg = 1,
 	rad = 180 / math.pi,
@@ -42,17 +44,8 @@ local function format_angle(degrees, output_format, include_suffix)
 
 	local value = degrees / factor
 
-	local formatted
-	if math.abs(value - math.floor(value + 0.5)) < 1e-9 then
-		formatted = string.format("%d", math.floor(value + 0.5))
-	else
-		if output_format == "rad" or output_format == "turn" then
-			formatted = string.format("%.6f", value)
-		else
-			formatted = string.format("%.2f", value)
-		end
-		formatted = formatted:gsub("0+$", ""):gsub("%.$", "")
-	end
+	local decimals = (output_format == "rad" or output_format == "turn") and 6 or 2
+	local formatted = shared.format_number(value, decimals)
 
 	if include_suffix then
 		formatted = formatted .. output_format

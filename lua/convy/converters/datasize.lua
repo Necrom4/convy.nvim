@@ -1,5 +1,7 @@
 local M = {}
 
+local shared = require("convy.converters.shared")
+
 local to_bytes = {
 	B = 1,
 	KB = 1024,
@@ -42,13 +44,7 @@ local function format_datasize(bytes, output_format, include_suffix)
 
 	local value = bytes / factor
 
-	local formatted
-	if math.abs(value - math.floor(value + 0.5)) < 1e-9 then
-		formatted = string.format("%d", math.floor(value + 0.5))
-	else
-		formatted = string.format("%.2f", value)
-		formatted = formatted:gsub("0+$", ""):gsub("%.$", "")
-	end
+	local formatted = shared.format_number(value)
 
 	if include_suffix then
 		formatted = formatted .. output_format

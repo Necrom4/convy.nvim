@@ -1,5 +1,7 @@
 local M = {}
 
+local shared = require("convy.converters.shared")
+
 local to_meters = {
 	px = 0.0254 / 96,
 	pt = 0.0254 / 72,
@@ -66,13 +68,7 @@ local function format_length(meters, output_format, include_suffix)
 
 	local value = meters / factor
 
-	local formatted
-	if math.abs(value - math.floor(value + 0.5)) < 1e-9 then
-		formatted = string.format("%d", math.floor(value + 0.5))
-	else
-		formatted = string.format("%.4f", value)
-		formatted = formatted:gsub("0+$", ""):gsub("%.$", "")
-	end
+	local formatted = shared.format_number(value, 4)
 
 	if include_suffix then
 		formatted = formatted .. output_format

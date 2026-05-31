@@ -1,5 +1,7 @@
 local M = {}
 
+local shared = require("convy.converters.shared")
+
 local to_seconds = {
 	ms = 0.001,
 	s = 1,
@@ -41,13 +43,7 @@ local function format_time(seconds, output_format, include_suffix)
 
 	local value = seconds / factor
 
-	local formatted
-	if math.abs(value - math.floor(value + 0.5)) < 1e-9 then
-		formatted = string.format("%d", math.floor(value + 0.5))
-	else
-		formatted = string.format("%.4f", value)
-		formatted = formatted:gsub("0+$", ""):gsub("%.$", "")
-	end
+	local formatted = shared.format_number(value, 4)
 
 	if include_suffix then
 		formatted = formatted .. output_format
