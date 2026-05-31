@@ -49,7 +49,7 @@ local function parse_length(text, input_format)
 	return value * factor
 end
 
-local function format_length(meters, output_format, include_suffix)
+local function format_length(meters, output_format, suffix)
 	local factor
 	if output_format == "rem" then
 		factor = get_rem_factor()
@@ -65,15 +65,15 @@ local function format_length(meters, output_format, include_suffix)
 
 	local formatted = shared.format_number(value, 4)
 
-	if include_suffix then
-		formatted = formatted .. output_format
+	if suffix then
+		formatted = formatted .. shared.apply_casing(output_format, suffix)
 	end
 
 	return formatted
 end
 
 function M.convert(text, input_format, output_format)
-	local suffix = shared.detect_suffix(text, input_format)
+	local _, suffix = shared.detect_suffix(text, input_format)
 	local meters = parse_length(text, input_format)
 	return format_length(meters, output_format, suffix)
 end

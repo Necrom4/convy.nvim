@@ -31,7 +31,7 @@ local function parse_datasize(text, input_format)
 	return value * factor
 end
 
-local function format_datasize(bytes, output_format, include_suffix)
+local function format_datasize(bytes, output_format, suffix)
 	local factor = to_bytes[output_format]
 	if not factor then
 		error("Unknown data size format: " .. tostring(output_format), 0)
@@ -41,15 +41,15 @@ local function format_datasize(bytes, output_format, include_suffix)
 
 	local formatted = shared.format_number(value)
 
-	if include_suffix then
-		formatted = formatted .. output_format
+	if suffix then
+		formatted = formatted .. shared.apply_casing(output_format, suffix)
 	end
 
 	return formatted
 end
 
 function M.convert(text, input_format, output_format)
-	local suffix = shared.detect_suffix(text, input_format)
+	local _, suffix = shared.detect_suffix(text, input_format)
 	local bytes = parse_datasize(text, input_format)
 	return format_datasize(bytes, output_format, suffix)
 end

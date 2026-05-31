@@ -12,18 +12,18 @@ local function detect_suffix_style(text, input_format)
 	local clean = text:match("^%s*(.-)%s*$") or text
 	local letter = suffix_letters[input_format]
 
-	local present = shared.detect_suffix(clean, letter)
+	local present, matched = shared.detect_suffix(clean, letter)
 	if not present then
-		return "none"
+		return "none", nil
 	end
 
 	-- A degree symbol (°) is two bytes in UTF-8; check the bytes preceding
 	-- the matched letter to distinguish "°C" from a bare "C".
 	if clean:sub(-(#letter + #"°"), -(#letter + 1)) == "°" then
-		return "degree"
+		return "degree", matched
 	end
 
-	return "letter"
+	return "letter", matched
 end
 
 local function parse_temperature(text, input_format)
@@ -50,7 +50,7 @@ local function parse_temperature(text, input_format)
 	end
 end
 
-local function format_temperature(celsius, output_format, suffix_style)
+local function format_temperature(celsius, output_format, suffix_style, source_letter)
 	local value
 
 	if output_format == "celsius" then
@@ -65,19 +65,21 @@ local function format_temperature(celsius, output_format, suffix_style)
 
 	local formatted = shared.format_number(value)
 
+	local letter = shared.apply_casing(suffix_letters[output_format], source_letter)
+
 	if suffix_style == "degree" then
-		formatted = formatted .. "°" .. suffix_letters[output_format]
+		formatted = formatted .. "°" .. letter
 	elseif suffix_style == "letter" then
-		formatted = formatted .. suffix_letters[output_format]
+		formatted = formatted .. letter
 	end
 
 	return formatted
 end
 
 function M.convert(text, input_format, output_format)
-	local suffix_style = detect_suffix_style(text, input_format)
+	local suffix_style, source_letter = detect_suffix_style(text, input_format)
 	local celsius = parse_temperature(text, input_format)
-	return format_temperature(celsius, output_format, suffix_style)
+	return format_temperature(celsius, output_format, suffix_style, source_letter)
 end
 
 return M

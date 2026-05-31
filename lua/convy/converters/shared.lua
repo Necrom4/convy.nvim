@@ -24,4 +24,24 @@ function M.detect_suffix(text, input_format)
 	return false, nil
 end
 
+function M.apply_casing(canonical, source)
+	if not source or #source ~= #canonical then
+		return canonical
+	end
+
+	local result = {}
+	for i = 1, #canonical do
+		local src_char = source:sub(i, i)
+		local out_char = canonical:sub(i, i)
+		if src_char:match("%l") then
+			out_char = out_char:lower()
+		elseif src_char:match("%u") then
+			out_char = out_char:upper()
+		end
+		result[i] = out_char
+	end
+
+	return table.concat(result)
+end
+
 return M

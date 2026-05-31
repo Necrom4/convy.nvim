@@ -31,7 +31,7 @@ local function parse_angle(text, input_format)
 end
 
 -- Format a degrees value to the target angle format.
-local function format_angle(degrees, output_format, include_suffix)
+local function format_angle(degrees, output_format, suffix)
 	local factor = to_degrees[output_format]
 	if not factor then
 		error("Unknown angle format: " .. tostring(output_format), 0)
@@ -42,15 +42,15 @@ local function format_angle(degrees, output_format, include_suffix)
 	local decimals = (output_format == "rad" or output_format == "turn") and 6 or 2
 	local formatted = shared.format_number(value, decimals)
 
-	if include_suffix then
-		formatted = formatted .. output_format
+	if suffix then
+		formatted = formatted .. shared.apply_casing(output_format, suffix)
 	end
 
 	return formatted
 end
 
 function M.convert(text, input_format, output_format)
-	local suffix = shared.detect_suffix(text, input_format)
+	local _, suffix = shared.detect_suffix(text, input_format)
 	local degrees = parse_angle(text, input_format)
 	return format_angle(degrees, output_format, suffix)
 end
