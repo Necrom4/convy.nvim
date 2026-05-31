@@ -150,125 +150,59 @@ function M.detect_format(text)
 		return "tailwind"
 	end
 
-	-- ── Temperature formats ────────────────────────────────────────
+	-- ── Unit formats (case-insensitive suffix match) ──────────────
+	local unit_suffixes = {
+		-- Temperature (strip an optional ° before the letter)
+		{ suffix = "K", format = "kelvin", degree = true },
+		{ suffix = "F", format = "fahrenheit", degree = true },
+		{ suffix = "C", format = "celsius", degree = true },
+		-- Angle
+		{ suffix = "turn", format = "turn" },
+		{ suffix = "grad", format = "grad" },
+		{ suffix = "rad", format = "rad" },
+		{ suffix = "deg", format = "deg" },
+		-- Time
+		{ suffix = "ms", format = "ms" },
+		{ suffix = "min", format = "min" },
+		{ suffix = "h", format = "h" },
+		{ suffix = "s", format = "s" },
+		-- Data size
+		{ suffix = "TB", format = "TB" },
+		{ suffix = "GB", format = "GB" },
+		{ suffix = "MB", format = "MB" },
+		{ suffix = "KB", format = "KB" },
+		{ suffix = "B", format = "B" },
+		-- Length
+		{ suffix = "px", format = "px" },
+		{ suffix = "rem", format = "rem" },
+		{ suffix = "pt", format = "pt" },
+		{ suffix = "km", format = "km" },
+		{ suffix = "cm", format = "cm" },
+		{ suffix = "mm", format = "mm" },
+		{ suffix = "m", format = "m" },
+		{ suffix = "mi", format = "mi" },
+		{ suffix = "yd", format = "yd" },
+		{ suffix = "ft", format = "ft" },
+		{ suffix = "in", format = "in" },
+	}
 
-	local no_degree = clean:gsub("°", "")
-
-	if no_degree:match("^%-?[%d%.]+K$") then
-		return "kelvin"
+	local function ends_with_ci(str, suffix)
+		return #str >= #suffix and str:sub(-#suffix):lower() == suffix:lower()
 	end
 
-	if no_degree:match("^%-?[%d%.]+F$") then
-		return "fahrenheit"
-	end
+	for _, unit in ipairs(unit_suffixes) do
+		local candidate = clean
+		if unit.degree then
+			candidate = candidate:gsub("°", "")
+		end
 
-	if no_degree:match("^%-?[%d%.]+C$") then
-		return "celsius"
-	end
-
-	-- ── Angle formats ──────────────────────────────────────────────
-
-	if clean:match("^%-?[%d%.]+turn$") then
-		return "turn"
-	end
-
-	if clean:match("^%-?[%d%.]+grad$") then
-		return "grad"
-	end
-
-	if clean:match("^%-?[%d%.]+rad$") then
-		return "rad"
-	end
-
-	if clean:match("^%-?[%d%.]+deg$") then
-		return "deg"
-	end
-
-	-- ── Time formats ───────────────────────────────────────────────
-
-	-- Must check "min" before "m" (length) and "ms" before "m"
-	if clean:match("^[%d%.]+ms$") then
-		return "ms"
-	end
-
-	if clean:match("^[%d%.]+min$") then
-		return "min"
-	end
-
-	if clean:match("^[%d%.]+h$") then
-		return "h"
-	end
-
-	if clean:match("^[%d%.]+s$") then
-		return "s"
-	end
-
-	-- ── Data size formats ──────────────────────────────────────────
-
-	if clean:match("^[%d%.]+TB$") then
-		return "TB"
-	end
-
-	if clean:match("^[%d%.]+GB$") then
-		return "GB"
-	end
-
-	if clean:match("^[%d%.]+MB$") then
-		return "MB"
-	end
-
-	if clean:match("^[%d%.]+KB$") then
-		return "KB"
-	end
-
-	if clean:match("^[%d%.]+B$") then
-		return "B"
-	end
-
-	-- ── Length formats ─────────────────────────────────────────────
-
-	if clean:match("^%-?[%d%.]+px$") then
-		return "px"
-	end
-
-	if clean:match("^%-?[%d%.]+rem$") then
-		return "rem"
-	end
-
-	if clean:match("^%-?[%d%.]+pt$") then
-		return "pt"
-	end
-
-	if clean:match("^%-?[%d%.]+km$") then
-		return "km"
-	end
-
-	if clean:match("^%-?[%d%.]+cm$") then
-		return "cm"
-	end
-
-	if clean:match("^%-?[%d%.]+mm$") then
-		return "mm"
-	end
-
-	if clean:match("^%-?[%d%.]+m$") then
-		return "m"
-	end
-
-	if clean:match("^%-?[%d%.]+mi$") then
-		return "mi"
-	end
-
-	if clean:match("^%-?[%d%.]+yd$") then
-		return "yd"
-	end
-
-	if clean:match("^%-?[%d%.]+ft$") then
-		return "ft"
-	end
-
-	if clean:match("^%-?[%d%.]+in$") then
-		return "in"
+		if ends_with_ci(candidate, unit.suffix) then
+			local number = candidate:sub(1, #candidate - #unit.suffix)
+			-- The remaining prefix must be a bare (optionally negative) number.
+			if number:match("^%-?[%d%.]+$") then
+				return unit.format
+			end
+		end
 	end
 
 	-- ── Text encoding formats (original detection logic) ───────────
