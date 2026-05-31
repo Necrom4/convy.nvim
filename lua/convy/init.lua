@@ -73,7 +73,7 @@ function M.convert(input_format, output_format, use_visual)
 	utils.replace_text(start_pos, end_pos, result)
 
 	utils.notify(
-		string.format("Converted from %s to %s", input_format:upper(), output_format:upper()),
+		string.format("Converted from %s to %s", formats.display(input_format), formats.display(output_format)),
 		vim.log.levels.INFO
 	)
 end
