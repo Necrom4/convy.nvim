@@ -9,11 +9,11 @@ A powerful Neovim plugin to convert between various formats
 - 🔄 Multiple Formats: from ASCII to binary, Morse and Freedom Units
   - **Text**: `ascii`, `bin`, `dec`, `hex`, `oct`, `b64`, `sha256`, `md5`, `morse`
   - **Data** sizes: `B`, `KB`, `MB`, `GB`, `TB`
-  - **Lengths**: `pex`, `rem`, `pt`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`
+  - **Lengths**: `px`, `rem`, `pt`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`
   - **Colors**: `hex`, `rgb`, `hsl`, `tailwind`
   - **Time**: `ms`, `s`, `min`, `h`
   - **Angles**: `deg`, `rad`, `grad`, `turn`
-  - **Temperatures**: `celcius`, `fahrenheit`, `kelvin`
+  - **Temperatures**: `celsius`, `fahrenheit`, `kelvin`
 - 🤖 Auto-detection of input format
 - 🎯 Smart selection: works with visual selection or word-under-cursor
 - 🎨 Interactive floating window UI for format selection
@@ -60,7 +60,7 @@ A powerful Neovim plugin to convert between various formats
     {
       "<leader>cs",
       ":ConvySeparator<CR>",
-      desc = "Set convertion separator (visual selection)",
+      desc = "Set conversion separator (visual selection)",
       mode = { "v" },
       silent = true,
     },

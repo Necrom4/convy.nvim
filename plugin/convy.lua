@@ -89,5 +89,5 @@ vim.api.nvim_create_user_command("ConvySeparator", function(opts)
 end, {
 	nargs = "*",
 	range = true,
-	desc = "Change convertion separator",
+	desc = "Change conversion separator",
 })
