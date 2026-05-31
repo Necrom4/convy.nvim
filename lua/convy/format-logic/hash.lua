@@ -71,7 +71,8 @@ function M.sha256(msg)
 		h7 = band(h7 + h, 0xFFFFFFFF)
 	end
 
-	return string.format("%08x%08x%08x%08x%08x%08x%08x%08x", h0, h1, h2, h3, h4, h5, h6, h7)
+	local tohex = bit.tohex
+	return tohex(h0) .. tohex(h1) .. tohex(h2) .. tohex(h3) .. tohex(h4) .. tohex(h5) .. tohex(h6) .. tohex(h7)
 end
 
 ---------
