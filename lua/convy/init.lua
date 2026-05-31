@@ -48,8 +48,8 @@ function M.convert(input_format, output_format, use_visual)
 	if not formats.are_compatible(input_format, output_format) then
 		local in_group = formats.get_group(input_format)
 		local out_group = formats.get_group(output_format)
-		local in_label = in_group and formats.groups[in_group].label or "unknown"
-		local out_label = out_group and formats.groups[out_group].label or "unknown"
+		local in_label = in_group and formats.label(in_group) or "unknown"
+		local out_label = out_group and formats.label(out_group) or "unknown"
 		utils.notify(
 			string.format(
 				"Cannot convert %s (%s) to %s (%s) — incompatible format groups",

@@ -139,6 +139,34 @@ function M.replace_text(start_pos, end_pos, new_text)
 	vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, new_lines)
 end
 
+-- Unit suffixes from the registry, longest first so ambiguous prefixes
+-- (e.g. "ms"/"min" vs "m"/"s") resolve correctly. Built once.
+local cached_suffixes
+local function unit_suffixes()
+	if cached_suffixes then
+		return cached_suffixes
+	end
+
+	local formats = require("convy.formats")
+	cached_suffixes = {}
+	for _, group in ipairs(formats.groups) do
+		if group.kind == "linear" then
+			for _, entry in ipairs(group.formats) do
+				table.insert(cached_suffixes, { suffix = entry.suffix, format = entry.name })
+			end
+		elseif group.kind == "temperature" then
+			for _, entry in ipairs(group.formats) do
+				table.insert(cached_suffixes, { suffix = entry.letter, format = entry.name, degree = true })
+			end
+		end
+	end
+
+	table.sort(cached_suffixes, function(a, b)
+		return #a.suffix > #b.suffix
+	end)
+	return cached_suffixes
+end
+
 -- Auto-detect input format
 function M.detect_format(text)
 	-- Remove whitespace for detection
@@ -164,55 +192,15 @@ function M.detect_format(text)
 		return "tailwind"
 	end
 
-	-- ── Unit formats (case-insensitive suffix match) ──────────────
-	local unit_suffixes = {
-		-- Temperature (strip an optional ° before the letter)
-		{ suffix = "K", format = "kelvin", degree = true },
-		{ suffix = "F", format = "fahrenheit", degree = true },
-		{ suffix = "C", format = "celsius", degree = true },
-		-- Angle
-		{ suffix = "turn", format = "turn" },
-		{ suffix = "grad", format = "grad" },
-		{ suffix = "rad", format = "rad" },
-		{ suffix = "deg", format = "deg" },
-		-- Time
-		{ suffix = "ms", format = "ms" },
-		{ suffix = "min", format = "min" },
-		{ suffix = "h", format = "h" },
-		{ suffix = "s", format = "s" },
-		-- Data size
-		{ suffix = "TB", format = "TB" },
-		{ suffix = "GB", format = "GB" },
-		{ suffix = "MB", format = "MB" },
-		{ suffix = "KB", format = "KB" },
-		{ suffix = "B", format = "B" },
-		-- Length
-		{ suffix = "px", format = "px" },
-		{ suffix = "rem", format = "rem" },
-		{ suffix = "pt", format = "pt" },
-		{ suffix = "km", format = "km" },
-		{ suffix = "cm", format = "cm" },
-		{ suffix = "mm", format = "mm" },
-		{ suffix = "m", format = "m" },
-		{ suffix = "mi", format = "mi" },
-		{ suffix = "yd", format = "yd" },
-		{ suffix = "ft", format = "ft" },
-		{ suffix = "in", format = "in" },
-	}
-
+	-- ── Unit formats (longest suffix first, case-insensitive) ─────
 	local function ends_with_ci(str, suffix)
 		return #str >= #suffix and str:sub(-#suffix):lower() == suffix:lower()
 	end
 
-	for _, unit in ipairs(unit_suffixes) do
-		local candidate = clean
-		if unit.degree then
-			candidate = candidate:gsub("°", "")
-		end
-
+	for _, unit in ipairs(unit_suffixes()) do
+		local candidate = unit.degree and clean:gsub("°", "") or clean
 		if ends_with_ci(candidate, unit.suffix) then
 			local number = candidate:sub(1, #candidate - #unit.suffix)
-			-- The remaining prefix must be a bare (optionally negative) number.
 			if number:match("^%-?[%d%.]+$") then
 				return unit.format
 			end

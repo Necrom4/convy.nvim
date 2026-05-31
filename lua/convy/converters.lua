@@ -3,13 +3,13 @@ local M = {}
 local formats = require("convy.formats")
 
 local group_modules = {
-	angle = "convy.converters.angle",
+	angle = "convy.converters.linear",
 	color = "convy.converters.color",
-	datasize = "convy.converters.datasize",
-	length = "convy.converters.length",
+	datasize = "convy.converters.linear",
+	length = "convy.converters.linear",
 	temperature = "convy.converters.temperature",
 	encoding = "convy.converters.encoding",
-	time = "convy.converters.time",
+	time = "convy.converters.linear",
 }
 
 function M.convert(text, input_format, output_format)
@@ -28,9 +28,9 @@ function M.convert(text, input_format, output_format)
 			string.format(
 				"Cannot convert between incompatible format groups: %s (%s) -> %s (%s)",
 				input_format,
-				formats.groups[group].label,
+				formats.label(group),
 				output_format,
-				formats.groups[out_group].label
+				formats.label(out_group)
 			)
 		)
 	end

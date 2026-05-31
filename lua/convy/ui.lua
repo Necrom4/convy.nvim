@@ -76,12 +76,15 @@ end
 local function build_columns()
 	local columns = {}
 
-	for _, group_key in ipairs(formats_mod.group_order) do
-		local group = formats_mod.groups[group_key]
+	for _, group in ipairs(formats_mod.groups) do
+		local items = {}
+		for _, entry in ipairs(group.formats) do
+			table.insert(items, entry.name)
+		end
 		table.insert(columns, {
-			group_key = group_key,
+			group_key = group.key,
 			label = group.label,
-			items = vim.deepcopy(group.formats),
+			items = items,
 		})
 	end
 
@@ -94,7 +97,7 @@ local function calc_column_widths(columns)
 	for _, col in ipairs(columns) do
 		local max_w = display_width(col.label)
 		for _, item in ipairs(col.items) do
-			local item_w = display_width(item) + 2
+			local item_w = display_width(formats_mod.display(item)) + 2
 			if item_w > max_w then
 				max_w = item_w
 			end
@@ -165,7 +168,7 @@ local function render_input_window(buf, columns, col_widths, cursor_on_auto, cur
 			else
 				local item_idx = row_i - 2
 				if item_idx <= #col.items then
-					local item = col.items[item_idx]
+					local item = formats_mod.display(col.items[item_idx])
 					local is_selected = not cursor_on_auto and ci == cursor_col and item_idx == cursor_row
 					if is_selected then
 						cell = "▶ " .. item
@@ -235,17 +238,18 @@ local function render_output_window(buf, output_formats, input_format, cursor_ro
 
 	table.insert(lines, "  Select OUTPUT format")
 	table.insert(highlights, { line = 0, hl = "Title" })
-	table.insert(lines, string.format("  (Input: %s)", input_format))
+	table.insert(lines, string.format("  (Input: %s)", formats_mod.display(input_format)))
 	table.insert(highlights, { line = 1, hl = "Comment" })
 	table.insert(lines, "")
 
 	for i, format in ipairs(output_formats) do
 		local line
+		local display = formats_mod.display(format)
 		if i == cursor_row then
-			line = string.format(" ▶ %s", format)
+			line = string.format(" ▶ %s", display)
 			table.insert(highlights, { line = #lines, hl = "Visual", text_hl = "String" })
 		else
-			line = string.format("   %s", format)
+			line = string.format("   %s", display)
 			table.insert(highlights, { line = #lines, hl = "Normal", text_hl = "Identifier" })
 		end
 		table.insert(lines, line)
