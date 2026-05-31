@@ -9,11 +9,6 @@ local to_degrees = {
 	turn = 360,
 }
 
-local function has_unit_suffix(text, input_format)
-	local clean = text:match("^%s*(.-)%s*$") or text
-	return clean:match(input_format .. "$") ~= nil
-end
-
 local function parse_angle(text, input_format)
 	local clean = text:match("^%s*(.-)%s*$") or text
 
@@ -55,7 +50,7 @@ local function format_angle(degrees, output_format, include_suffix)
 end
 
 function M.convert(text, input_format, output_format)
-	local suffix = has_unit_suffix(text, input_format)
+	local suffix = shared.detect_suffix(text, input_format)
 	local degrees = parse_angle(text, input_format)
 	return format_angle(degrees, output_format, suffix)
 end

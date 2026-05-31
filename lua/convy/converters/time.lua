@@ -9,11 +9,6 @@ local to_seconds = {
 	h = 3600,
 }
 
-local function has_unit_suffix(text, input_format)
-	local clean = text:match("^%s*(.-)%s*$") or text
-	return clean:match(input_format .. "$") ~= nil
-end
-
 local function parse_time(text, input_format)
 	local clean = text:match("^%s*(.-)%s*$") or text
 
@@ -53,7 +48,7 @@ local function format_time(seconds, output_format, include_suffix)
 end
 
 function M.convert(text, input_format, output_format)
-	local suffix = has_unit_suffix(text, input_format)
+	local suffix = shared.detect_suffix(text, input_format)
 	local seconds = parse_time(text, input_format)
 	return format_time(seconds, output_format, suffix)
 end

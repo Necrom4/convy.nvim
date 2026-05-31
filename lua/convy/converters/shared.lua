@@ -12,4 +12,16 @@ function M.format_number(value, decimals)
 	return formatted
 end
 
+function M.detect_suffix(text, input_format)
+	local clean = text:match("^%s*(.-)%s*$") or text
+	local len = #input_format
+	local tail = clean:sub(-len)
+
+	if tail:lower() == input_format:lower() then
+		return true, tail
+	end
+
+	return false, nil
+end
+
 return M

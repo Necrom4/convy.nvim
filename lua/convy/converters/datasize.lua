@@ -10,11 +10,6 @@ local to_bytes = {
 	TB = 1024 * 1024 * 1024 * 1024,
 }
 
-local function has_unit_suffix(text, input_format)
-	local clean = text:match("^%s*(.-)%s*$") or text
-	return clean:match(input_format .. "$") ~= nil
-end
-
 local function parse_datasize(text, input_format)
 	local clean = text:match("^%s*(.-)%s*$") or text
 
@@ -54,7 +49,7 @@ local function format_datasize(bytes, output_format, include_suffix)
 end
 
 function M.convert(text, input_format, output_format)
-	local suffix = has_unit_suffix(text, input_format)
+	local suffix = shared.detect_suffix(text, input_format)
 	local bytes = parse_datasize(text, input_format)
 	return format_datasize(bytes, output_format, suffix)
 end

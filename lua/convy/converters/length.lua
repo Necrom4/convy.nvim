@@ -22,11 +22,6 @@ local function get_rem_factor()
 	return base * (0.0254 / 96)
 end
 
-local function has_unit_suffix(text, input_format)
-	local clean = text:match("^%s*(.-)%s*$") or text
-	return clean:match(input_format .. "$") ~= nil
-end
-
 local function parse_length(text, input_format)
 	local clean = text:match("^%s*(.-)%s*$") or text
 
@@ -78,7 +73,7 @@ local function format_length(meters, output_format, include_suffix)
 end
 
 function M.convert(text, input_format, output_format)
-	local suffix = has_unit_suffix(text, input_format)
+	local suffix = shared.detect_suffix(text, input_format)
 	local meters = parse_length(text, input_format)
 	return format_length(meters, output_format, suffix)
 end

@@ -12,13 +12,18 @@ local function detect_suffix_style(text, input_format)
 	local clean = text:match("^%s*(.-)%s*$") or text
 	local letter = suffix_letters[input_format]
 
-	if clean:match("°" .. letter .. "$") then
-		return "degree"
-	elseif clean:match(letter .. "$") then
-		return "letter"
-	else
+	local present = shared.detect_suffix(clean, letter)
+	if not present then
 		return "none"
 	end
+
+	-- A degree symbol (°) is two bytes in UTF-8; check the bytes preceding
+	-- the matched letter to distinguish "°C" from a bare "C".
+	if clean:sub(-(#letter + #"°"), -(#letter + 1)) == "°" then
+		return "degree"
+	end
+
+	return "letter"
 end
 
 local function parse_temperature(text, input_format)
