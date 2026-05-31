@@ -45,6 +45,14 @@ local function parse_input(text, input_format)
 	return numbers
 end
 
+local function to_bytes(numbers)
+	local chars = {}
+	for _, num in ipairs(numbers) do
+		chars[#chars + 1] = string.char(num)
+	end
+	return table.concat(chars)
+end
+
 local function format_output(numbers, output_format)
 	local config = require("convy").config
 	local results = {}
@@ -89,29 +97,13 @@ local function format_output(numbers, output_format)
 		end
 		return table.concat(results, config.separator)
 	elseif output_format == "b64" then
-		local text = ""
-		for _, num in ipairs(numbers) do
-			text = text .. string.char(num)
-		end
-		return base64.encode(text)
+		return base64.encode(to_bytes(numbers))
 	elseif output_format == "sha256" then
-		local text = ""
-		for _, num in ipairs(numbers) do
-			text = text .. string.char(num)
-		end
-		return hash.sha256(text)
+		return hash.sha256(to_bytes(numbers))
 	elseif output_format == "md5" then
-		local text = ""
-		for _, num in ipairs(numbers) do
-			text = text .. string.char(num)
-		end
-		return hash.md5(text)
+		return hash.md5(to_bytes(numbers))
 	elseif output_format == "morse" then
-		local text = ""
-		for _, num in ipairs(numbers) do
-			text = text .. string.char(num)
-		end
-		return morse.from_text(text)
+		return morse.from_text(to_bytes(numbers))
 	else
 		error("Unknown output format: " .. tostring(output_format), 0)
 	end
