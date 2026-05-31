@@ -31,6 +31,20 @@ function M.get_visual_selection()
 		return nil, nil, nil
 	end
 
+	-- `'>` reports v:maxcol (a huge number) for linewise selections and when
+	-- the selection reaches end-of-line. Clamp it to the actual last column so
+	-- we never replace beyond the selected text.
+	local last_line_len = #lines[#lines]
+	if end_col > last_line_len then
+		end_col = last_line_len
+	end
+
+	-- With `selection=exclusive` the end column is one past the last selected
+	-- character, so pull it back to stay within the selection.
+	if vim.o.selection == "exclusive" and end_col > start_col then
+		end_col = end_col - 1
+	end
+
 	-- Handle single line selection
 	if #lines == 1 then
 		lines[1] = lines[1]:sub(start_col, end_col)
