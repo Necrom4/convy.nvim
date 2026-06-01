@@ -8,11 +8,12 @@ local ns = vim.api.nvim_create_namespace("convy")
 
 local function setup_highlights()
 	local defs = {
-		ConvyAuto = { link = "Special" },
+		ConvyAuto = { link = "Identifier" },
 		ConvyGroup = { link = "Title" },
-		ConvyUnit = { link = "Identifier" },
+		ConvyUnit = { link = "Normal" },
 		ConvyDim = { link = "Comment" },
 		ConvyStrong = { link = "String" },
+		ConvyHover = { link = "String" },
 		ConvyLabel = { link = "Comment" },
 	}
 	for name, def in pairs(defs) do
@@ -87,6 +88,16 @@ local function active_group(state)
 	return formats.get_group(fmt)
 end
 
+local function is_tree_row(row)
+	return row and (row.kind == "auto" or row.kind == "group" or row.kind == "unit")
+end
+
+-- The cursor line is the source of truth for the current row.
+local function current_row(state)
+	local line = vim.api.nvim_win_get_cursor(state.win)[1]
+	return state.line_map and state.line_map[line]
+end
+
 local function render(state)
 	setup_highlights()
 	local lines = {}
@@ -101,19 +112,25 @@ local function render(state)
 
 	-- Tree section
 	local agroup = active_group(state)
+	local cursor_line = vim.api.nvim_win_is_valid(state.win) and vim.api.nvim_win_get_cursor(state.win)[1]
 	for _, row in ipairs(state.rows) do
+		local hl
 		if row.kind == "auto" then
-			local l = add("  auto", row)
-			table.insert(hls, { line = l, col_start = 0, col_end = -1, hl = "ConvyAuto" })
+			add("  auto", row)
+			hl = "ConvyAuto"
 		elseif row.kind == "group" then
 			local arrow = state.expanded[row.key] and "▾" or "▸"
-			local l = add(string.format("  %s %s", arrow, row.label), row)
-			table.insert(hls, { line = l, col_start = 0, col_end = -1, hl = "ConvyGroup" })
+			add(string.format("  %s %s", arrow, row.label), row)
+			hl = "ConvyGroup"
 		elseif row.kind == "unit" then
-			local l = add("      " .. formats.display(row.name), row)
+			add("      " .. formats.display(row.name), row)
 			local dim = agroup ~= nil and row.group ~= agroup
-			table.insert(hls, { line = l, col_start = 0, col_end = -1, hl = dim and "ConvyDim" or "ConvyUnit" })
+			hl = dim and "ConvyDim" or "ConvyUnit"
 		end
+		if #lines == cursor_line then
+			hl = "ConvyHover"
+		end
+		table.insert(hls, { line = #lines - 1, col_start = 0, col_end = -1, hl = hl })
 	end
 
 	-- Result section: "<unit>: <value>", unit strong, value normal.
@@ -137,16 +154,6 @@ local function render(state)
 	for _, h in ipairs(hls) do
 		vim.api.nvim_buf_add_highlight(state.buf, ns, h.hl, h.line, h.col_start, h.col_end)
 	end
-end
-
-local function is_tree_row(row)
-	return row and (row.kind == "auto" or row.kind == "group" or row.kind == "unit")
-end
-
--- The cursor line is the source of truth for the current row.
-local function current_row(state)
-	local line = vim.api.nvim_win_get_cursor(state.win)[1]
-	return state.line_map[line]
 end
 
 local function place_cursor(state, line)
