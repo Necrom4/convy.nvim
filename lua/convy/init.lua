@@ -27,15 +27,28 @@ function M.get_output_formats(input_format)
 end
 
 
-function M.convert(input_format, output_format, use_visual)
+-- Capture the source text and its position from the current window.
+local function capture_origin(use_visual)
 	local text, start_pos, end_pos
-
 	if use_visual then
 		text, start_pos, end_pos = utils.get_visual_selection()
 	else
 		text, start_pos, end_pos = utils.get_word_under_cursor()
 	end
 
+	return {
+		win = vim.api.nvim_get_current_win(),
+		buf = vim.api.nvim_get_current_buf(),
+		text = text,
+		start_pos = start_pos,
+		end_pos = end_pos,
+	}
+end
+
+-- Convert `text` and write the result back at the captured origin position.
+-- `input_format` may be "auto" to detect from the text.
+function M.convert_origin(origin, input_format, output_format)
+	local text = origin.text
 	if not text or text == "" then
 		utils.notify("No text to convert", vim.log.levels.WARN)
 		return
@@ -70,7 +83,9 @@ function M.convert(input_format, output_format, use_visual)
 		return
 	end
 
-	utils.replace_text(start_pos, end_pos, result)
+	vim.api.nvim_win_call(origin.win, function()
+		utils.replace_text(origin.start_pos, origin.end_pos, result)
+	end)
 
 	utils.notify(
 		string.format("Converted from %s to %s", formats.display(input_format), formats.display(output_format)),
@@ -78,22 +93,17 @@ function M.convert(input_format, output_format, use_visual)
 	)
 end
 
+function M.convert(input_format, output_format, use_visual)
+	M.convert_origin(capture_origin(use_visual), input_format, output_format)
+end
+
 function M.show_selector(use_visual)
-	local ui = require("convy.ui")
-
-	-- Capture text before opening the float (float takes focus)
-	local source_text
-	if use_visual then
-		source_text = utils.get_visual_selection()
-	else
-		source_text = utils.get_word_under_cursor()
-	end
-
-	ui.show_format_selector(function(input_format, output_format)
+	local origin = capture_origin(use_visual)
+	require("convy.ui").show_format_selector(function(input_format, output_format)
 		if input_format and output_format then
-			M.convert(input_format, output_format, use_visual)
+			M.convert_origin(origin, input_format, output_format)
 		end
-	end, source_text)
+	end, origin.text)
 end
 
 return M
