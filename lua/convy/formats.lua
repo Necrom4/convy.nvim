@@ -85,10 +85,15 @@ M.groups = {
 		kind = "linear",
 		decimals = 4,
 		formats = {
+			{ name = "ns", suffix = "ns", factor = 1e-9 },
+			{ name = "us", suffix = "us", factor = 1e-6 },
 			{ name = "ms", suffix = "ms", factor = 0.001 },
 			{ name = "s", suffix = "s", factor = 1 },
 			{ name = "min", suffix = "min", factor = 60 },
 			{ name = "h", suffix = "h", factor = 3600 },
+			{ name = "day", suffix = "day", factor = 86400 },
+			{ name = "week", suffix = "week", factor = 604800 },
+			{ name = "fortnight", suffix = "fortnight", factor = 1209600 },
 		},
 	},
 	{
