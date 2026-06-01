@@ -8,10 +8,10 @@ A powerful Neovim plugin to convert between various formats
 
 - 🔄 Multiple Formats: from ASCII to binary, Morse and Freedom Units
   - **Text**: `ascii`, `bin`, `dec`, `hex`, `oct`, `b64`, `sha256`, `md5`, `morse`
-  - **Data** sizes: `B`, `KB`, `MB`, `GB`, `TB`
-  - **Lengths**: `px`, `rem`, `pt`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`
+  - **Data** sizes: `B`, `KB`, `MB`, `GB`, `TB` (SI), `KiB`, `MiB`, `GiB`, `TiB` (IEC)
+  - **Lengths**: `px`, `rem`, `em`, `pt`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`, `barleycorn`, `hand`, `fathom`, `chain`, `furlong`, `league`, `nmi`
   - **Colors**: `hex`, `rgb`, `hsl`, `tailwind`
-  - **Time**: `ms`, `s`, `min`, `h`
+  - **Time**: `ns`, `us`, `ms`, `s`, `min`, `h`, `day`, `week`, `fortnight`
   - **Angles**: `deg`, `rad`, `grad`, `turn`
   - **Temperatures**: `celsius`, `fahrenheit`, `kelvin`
 - 🤖 Auto-detection of input format
