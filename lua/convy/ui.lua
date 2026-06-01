@@ -98,14 +98,6 @@ local function render(state)
 		return #lines - 1
 	end
 
-	-- Search section
-	add(string.format("  Search: %s", state.query), { kind = "search" })
-	do
-		local l = #lines - 1
-		table.insert(hls, { line = l, col_start = 2, col_end = 9, hl = "ConvyLabel" })
-	end
-	add("  " .. string.rep("─", state.width - 4), nil)
-
 	-- Tree section
 	local agroup = active_group(state)
 	for _, row in ipairs(state.rows) do
