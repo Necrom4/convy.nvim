@@ -41,7 +41,8 @@ M.groups = {
 		decimals = 4,
 		formats = {
 			{ name = "px", suffix = "px", factor = 0.0254 / 96 },
-			{ name = "rem", suffix = "rem", dynamic = "rem" },
+			{ name = "rem", suffix = "rem", dynamic = "font" },
+			{ name = "em", suffix = "em", dynamic = "font" },
 			{ name = "pt", suffix = "pt", factor = 0.0254 / 72 },
 			{ name = "mm", suffix = "mm", factor = 0.001 },
 			{ name = "cm", suffix = "cm", factor = 0.01 },

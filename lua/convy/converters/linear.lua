@@ -3,9 +3,9 @@ local M = {}
 local shared = require("convy.converters.shared")
 local formats = require("convy.formats")
 
--- rem depends on the configured base font size.
+-- Font-relative units (rem, em) depend on the configured base font size.
 local function factor_of(entry)
-	if entry.dynamic == "rem" then
+	if entry.dynamic == "font" then
 		local base = require("convy").config.css_base_font_size or 16
 		return base * (0.0254 / 96)
 	end
