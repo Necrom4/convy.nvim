@@ -58,6 +58,14 @@ M.groups = {
 			{ name = "ft", suffix = "ft", factor = 0.3048 },
 			{ name = "yd", suffix = "yd", factor = 0.9144 },
 			{ name = "mi", suffix = "mi", factor = 1609.344 },
+			-- Imperial / nautical
+			{ name = "barleycorn", suffix = "barleycorn", factor = 0.0254 / 3 },
+			{ name = "hand", suffix = "hand", factor = 0.1016 },
+			{ name = "fathom", suffix = "fathom", factor = 1.8288 },
+			{ name = "chain", suffix = "chain", factor = 20.1168 },
+			{ name = "furlong", suffix = "furlong", factor = 201.168 },
+			{ name = "league", suffix = "league", factor = 4828.032 },
+			{ name = "nmi", suffix = "nmi", factor = 1852 },
 		},
 	},
 	{
