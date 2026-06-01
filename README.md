@@ -16,7 +16,7 @@ A powerful Neovim plugin to convert between various formats
   - **Temperatures**: `celsius`, `fahrenheit`, `kelvin`
 - 🤖 Auto-detection of input format
 - 🎯 Smart selection: works with visual selection or word-under-cursor
-- 🎨 Interactive floating window UI for format selection
+- 🌳 Interactive split-window tree UI with search and live result preview
 
 ## 📦 Installation
 
@@ -37,8 +37,8 @@ A powerful Neovim plugin to convert between various formats
     notifications = true,
     separator = " ",
     window = {
-      blend = 25,
-      border = "rounded"
+      position = "left", -- "left" or "right"
+      width = 36,
     },
   },
   keys = {
@@ -110,10 +110,10 @@ lua require("convy.utils").set_separator(", ") -- sets the separator to `, `
 
 " [Hello]
 :Convy
-" Opens the interactive selection window
-" Choose the input format (ascii) with `j/k` and accept with `<CR>`
-" Choose the output format (dec) with `j/k` and accept with `<CR>`
-" Converts selection from decimal to ascii
+" Opens the split-window selector
+" Navigate the tree with `j/k`, open a group with `l`/`right`, search with `/`
+" Select the input format (or `auto`) with `<CR>`/`<Space>`
+" Then select a compatible output format to apply and close
 " Result: 72 101 108 108 111
 ```
 
