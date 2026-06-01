@@ -193,6 +193,21 @@ local function move(state, delta)
 	end
 end
 
+-- Move the cursor to the next/previous group header row.
+local function move_group(state, delta)
+	local total = vim.api.nvim_buf_line_count(state.buf)
+	local line = vim.api.nvim_win_get_cursor(state.win)[1]
+	local l = line + delta
+	while l >= 1 and l <= total do
+		local row = state.line_map[l]
+		if row and row.kind == "group" then
+			place_cursor(state, l)
+			return
+		end
+		l = l + delta
+	end
+end
+
 -- Recompute the hovered unit/output from the row under the cursor.
 local function update_hover(state)
 	local row = current_row(state)
@@ -351,6 +366,14 @@ local function setup_keymaps(state)
 	map("<Right>", open_or_select)
 	map("h", close_or_collapse)
 	map("<Left>", close_or_collapse)
+	map("<Tab>", function(s)
+		move_group(s, 1)
+		update_hover(s)
+	end)
+	map("<S-Tab>", function(s)
+		move_group(s, -1)
+		update_hover(s)
+	end)
 	map("<Space>", M.select)
 	map("<CR>", M.select)
 	map("/", focus_search)
