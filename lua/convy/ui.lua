@@ -393,6 +393,9 @@ function M.open(origin, on_confirm)
 	vim.wo[win].winfixwidth = true
 	vim.wo[win].number = false
 	vim.wo[win].relativenumber = false
+	vim.wo[win].signcolumn = "no"
+	vim.wo[win].foldcolumn = "0"
+	vim.wo[win].statuscolumn = ""
 	vim.wo[win].cursorline = true
 	vim.wo[win].wrap = false
 
