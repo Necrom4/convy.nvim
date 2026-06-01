@@ -329,19 +329,6 @@ function M.close(state)
 	end
 end
 
-local function cycle_focus(state)
-	-- Tab cycles list -> search -> input -> list via prompts.
-	if state.focus == "list" then
-		state.focus = "search"
-		focus_search(state)
-	elseif state.focus == "search" then
-		state.focus = "input"
-		edit_input(state)
-	else
-		state.focus = "list"
-	end
-end
-
 local function setup_keymaps(state)
 	local opts = { noremap = true, silent = true, buffer = state.buf }
 	local function map(lhs, fn)
@@ -366,8 +353,8 @@ local function setup_keymaps(state)
 	map("<Left>", close_or_collapse)
 	map("<Space>", M.select)
 	map("<CR>", M.select)
-	map("<Tab>", cycle_focus)
 	map("/", focus_search)
+	map("i", edit_input)
 	map("<BS>", M.back)
 	map("<Esc>", function(s)
 		if s.input_fixed then
@@ -411,7 +398,6 @@ function M.open(origin, on_confirm)
 		width = width,
 		query = "",
 		expanded = expanded,
-		focus = "list",
 		input_fixed = false,
 		input_format = nil,
 		input_value = origin.text,
