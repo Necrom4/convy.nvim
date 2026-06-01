@@ -27,10 +27,16 @@ M.groups = {
 		kind = "linear",
 		formats = {
 			{ name = "b", display = "B", suffix = "b", factor = 1 },
-			{ name = "kb", display = "KB", suffix = "kb", factor = 1024 },
-			{ name = "mb", display = "MB", suffix = "mb", factor = 1024 ^ 2 },
-			{ name = "gb", display = "GB", suffix = "gb", factor = 1024 ^ 3 },
-			{ name = "tb", display = "TB", suffix = "tb", factor = 1024 ^ 4 },
+			-- SI decimal (powers of 1000)
+			{ name = "kb", display = "KB", suffix = "kb", factor = 1000 },
+			{ name = "mb", display = "MB", suffix = "mb", factor = 1000 ^ 2 },
+			{ name = "gb", display = "GB", suffix = "gb", factor = 1000 ^ 3 },
+			{ name = "tb", display = "TB", suffix = "tb", factor = 1000 ^ 4 },
+			-- IEC binary (powers of 1024)
+			{ name = "kib", display = "KiB", suffix = "kib", factor = 1024 },
+			{ name = "mib", display = "MiB", suffix = "mib", factor = 1024 ^ 2 },
+			{ name = "gib", display = "GiB", suffix = "gib", factor = 1024 ^ 3 },
+			{ name = "tib", display = "TiB", suffix = "tib", factor = 1024 ^ 4 },
 		},
 	},
 	{
