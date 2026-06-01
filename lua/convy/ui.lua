@@ -260,6 +260,38 @@ local function open_or_select(state)
 	M.select(state)
 end
 
+local function toggle_group(state)
+	local row = current_row(state)
+	if row and row.kind == "group" then
+		state.expanded[row.key] = not state.expanded[row.key]
+		refresh(state, row)
+		return true
+	end
+	return false
+end
+
+local function toggle_all(state)
+	local any_open = false
+	for _, v in pairs(state.expanded) do
+		any_open = any_open or v
+	end
+	for _, group in ipairs(formats.groups) do
+		state.expanded[group.key] = not any_open
+	end
+	local keep = current_row(state)
+	if keep and keep.kind == "unit" then
+		keep = nil
+	end
+	refresh(state, keep)
+end
+
+local function select_or_toggle(state)
+	if toggle_group(state) then
+		return
+	end
+	M.select(state)
+end
+
 local function close_or_collapse(state)
 	local row = current_row(state)
 	if not row then
@@ -279,8 +311,6 @@ local function close_or_collapse(state)
 	elseif row.kind == "group" and state.expanded[row.key] then
 		state.expanded[row.key] = false
 		refresh(state, row)
-	elseif state.input_fixed then
-		M.back(state)
 	end
 end
 
@@ -372,6 +402,7 @@ local function setup_keymaps(state)
 	map("<Right>", open_or_select)
 	map("h", close_or_collapse)
 	map("<Left>", close_or_collapse)
+	map("za", toggle_all)
 	map("<Tab>", function(s)
 		move_group(s, 1)
 		update_hover(s)
@@ -380,8 +411,8 @@ local function setup_keymaps(state)
 		move_group(s, -1)
 		update_hover(s)
 	end)
-	map("<Space>", M.select)
-	map("<CR>", M.select)
+	map("<Space>", select_or_toggle)
+	map("<CR>", select_or_toggle)
 	map("/", focus_search)
 	map("i", edit_input)
 	map("<BS>", M.back)
