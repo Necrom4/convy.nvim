@@ -1,525 +1,454 @@
 local M = {}
 
-local formats_mod = require("convy.formats")
+local formats = require("convy.formats")
+local converters = require("convy.converters")
+local utils = require("convy.utils")
 
--- Display width accounting for multi-byte UTF-8 chars
-local function display_width(str)
-	local width = 0
-	local i = 1
-	while i <= #str do
-		local byte = string.byte(str, i)
-		if byte < 0x80 then
-			width = width + 1
-			i = i + 1
-		elseif byte < 0xC0 then
-			i = i + 1
-		elseif byte < 0xE0 then
-			width = width + 1
-			i = i + 2
-		elseif byte < 0xF0 then
-			width = width + 1
-			i = i + 3
-		else
-			width = width + 1
-			i = i + 4
+local ns = vim.api.nvim_create_namespace("convy")
+
+local function setup_highlights()
+	local defs = {
+		ConvyAuto = { link = "Special" },
+		ConvyGroup = { link = "Title" },
+		ConvyUnit = { link = "Identifier" },
+		ConvyDim = { link = "Comment" },
+		ConvyStrong = { link = "String" },
+		ConvyLabel = { link = "Comment" },
+	}
+	for name, def in pairs(defs) do
+		if vim.fn.hlexists(name) == 0 then
+			def.default = true
+			vim.api.nvim_set_hl(0, name, def)
 		end
 	end
-	return width
 end
 
-local function pad_to_width(str, target_width)
-	local current = display_width(str)
-	local needed = target_width - current
-	if needed > 0 then
-		return str .. string.rep(" ", needed)
+-- Build the flat list of tree rows from the registry, applying expand state
+-- and the search query. Groups stay visible when any of their units match.
+local function build_rows(state)
+	local rows = { { kind = "auto" } }
+	local query = state.query:lower()
+
+	for _, group in ipairs(formats.groups) do
+		local units = {}
+		for _, entry in ipairs(group.formats) do
+			local label = formats.display(entry.name):lower()
+			if query == "" or label:find(query, 1, true) then
+				table.insert(units, entry)
+			end
+		end
+
+		if query == "" or #units > 0 then
+			table.insert(rows, { kind = "group", key = group.key, label = group.label })
+			if state.expanded[group.key] then
+				for _, entry in ipairs(units) do
+					table.insert(rows, { kind = "unit", name = entry.name, group = group.key })
+				end
+			end
+		end
 	end
-	return str
+
+	return rows
 end
 
-local function create_float_win(width, height, title)
-	local buf = vim.api.nvim_create_buf(false, true)
+-- Returns the input and output result lines as { unit, value } pairs.
+local function compute_preview(state)
+	local value = state.input_value
+	if not value or value == "" then
+		return nil, nil
+	end
 
+	local input = state.input_fixed and state.input_format or state.hover_format
+	if not input then
+		return nil, nil
+	end
+
+	local detected = input == "auto" and utils.detect_format(value) or input
+	local in_line = { unit = formats.display(detected), value = value }
+
+	if not state.input_fixed or not state.hover_output then
+		return in_line, nil
+	end
+
+	local ok, result = pcall(converters.convert, value, detected, state.hover_output)
+	if not ok then
+		return in_line, nil
+	end
+	return in_line, { unit = formats.display(state.hover_output), value = result }
+end
+
+-- The group whose units stay active once an input is fixed.
+local function active_group(state)
+	if not state.input_fixed then
+		return nil
+	end
+	local fmt = state.input_format == "auto" and utils.detect_format(state.input_value or "") or state.input_format
+	return formats.get_group(fmt)
+end
+
+local function render(state)
+	setup_highlights()
+	local lines = {}
+	local hls = {} -- { line, col_start, col_end, hl }
+	state.line_map = {}
+
+	local function add(text, row)
+		table.insert(lines, text)
+		state.line_map[#lines] = row
+		return #lines - 1
+	end
+
+	-- Search section
+	add(string.format("  Search: %s", state.query), { kind = "search" })
+	do
+		local l = #lines - 1
+		table.insert(hls, { line = l, col_start = 2, col_end = 9, hl = "ConvyLabel" })
+	end
+	add("  " .. string.rep("─", state.width - 4), nil)
+
+	-- Tree section
+	local agroup = active_group(state)
+	for _, row in ipairs(state.rows) do
+		if row.kind == "auto" then
+			local l = add("  auto", row)
+			table.insert(hls, { line = l, col_start = 0, col_end = -1, hl = "ConvyAuto" })
+		elseif row.kind == "group" then
+			local arrow = state.expanded[row.key] and "▾" or "▸"
+			local l = add(string.format("  %s %s", arrow, row.label), row)
+			table.insert(hls, { line = l, col_start = 0, col_end = -1, hl = "ConvyGroup" })
+		elseif row.kind == "unit" then
+			local l = add("      " .. formats.display(row.name), row)
+			local dim = agroup ~= nil and row.group ~= agroup
+			table.insert(hls, { line = l, col_start = 0, col_end = -1, hl = dim and "ConvyDim" or "ConvyUnit" })
+		end
+	end
+
+	-- Result section: "<unit>: <value>", unit strong, value normal.
+	add("  " .. string.rep("─", state.width - 4), nil)
+	local in_res, out_res = compute_preview(state)
+	local function add_result(res, row)
+		local text = res and string.format("  %s: %s", res.unit, res.value) or "  "
+		local l = add(text, row)
+		if res then
+			table.insert(hls, { line = l, col_start = 2, col_end = 2 + #res.unit, hl = "ConvyStrong" })
+		end
+	end
+	add_result(in_res, { kind = "input" })
+	add_result(out_res, nil)
+
+	vim.bo[state.buf].modifiable = true
+	vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)
+	vim.bo[state.buf].modifiable = false
+
+	vim.api.nvim_buf_clear_namespace(state.buf, ns, 0, -1)
+	for _, h in ipairs(hls) do
+		vim.api.nvim_buf_add_highlight(state.buf, ns, h.hl, h.line, h.col_start, h.col_end)
+	end
+end
+
+local function is_tree_row(row)
+	return row and (row.kind == "auto" or row.kind == "group" or row.kind == "unit")
+end
+
+-- The cursor line is the source of truth for the current row.
+local function current_row(state)
+	local line = vim.api.nvim_win_get_cursor(state.win)[1]
+	return state.line_map[line]
+end
+
+local function place_cursor(state, line)
+	pcall(vim.api.nvim_win_set_cursor, state.win, { line, 0 })
+end
+
+-- Keep the cursor on a selectable tree row, snapping off dividers/sections.
+local function clamp_cursor(state)
+	local total = vim.api.nvim_buf_line_count(state.buf)
+	local line = vim.api.nvim_win_get_cursor(state.win)[1]
+	if is_tree_row(state.line_map[line]) then
+		return
+	end
+	for off = 0, total do
+		for _, l in ipairs({ line + off, line - off }) do
+			if l >= 1 and l <= total and is_tree_row(state.line_map[l]) then
+				place_cursor(state, l)
+				return
+			end
+		end
+	end
+end
+
+-- Buffer line (1-indexed) of a row, matched by identity.
+local function line_of(state, row)
+	for line, mapped in pairs(state.line_map) do
+		if mapped == row then
+			return line
+		end
+	end
+end
+
+-- Move the cursor to the next/previous selectable tree row.
+local function move(state, delta)
+	local total = vim.api.nvim_buf_line_count(state.buf)
+	local line = vim.api.nvim_win_get_cursor(state.win)[1]
+	local l = line + delta
+	while l >= 1 and l <= total do
+		if is_tree_row(state.line_map[l]) then
+			place_cursor(state, l)
+			return
+		end
+		l = l + delta
+	end
+end
+
+-- Recompute the hovered unit/output from the row under the cursor.
+local function update_hover(state)
+	local row = current_row(state)
+	if not row then
+		return
+	end
+	if not state.input_fixed then
+		if row.kind == "auto" then
+			state.hover_format = "auto"
+		elseif row.kind == "unit" then
+			state.hover_format = row.name
+		else
+			state.hover_format = nil
+		end
+	elseif row.kind == "unit" then
+		state.hover_output = row.name
+	end
+	render(state)
+end
+
+local function refresh(state, keep_row)
+	state.rows = build_rows(state)
+	render(state)
+	if keep_row then
+		local line = line_of(state, keep_row)
+		if line then
+			place_cursor(state, line)
+		end
+	end
+	update_hover(state)
+end
+
+local function open_or_select(state)
+	local row = current_row(state)
+	if row and row.kind == "group" then
+		if not state.expanded[row.key] then
+			state.expanded[row.key] = true
+			refresh(state, row)
+		else
+			M.select(state)
+		end
+		return
+	end
+	M.select(state)
+end
+
+local function close_or_collapse(state)
+	local row = current_row(state)
+	if not row then
+		return
+	end
+	if row.kind == "unit" then
+		local group_row
+		state.expanded[row.group] = false
+		state.rows = build_rows(state)
+		for _, r in ipairs(state.rows) do
+			if r.kind == "group" and r.key == row.group then
+				group_row = r
+				break
+			end
+		end
+		refresh(state, group_row)
+	elseif row.kind == "group" and state.expanded[row.key] then
+		state.expanded[row.key] = false
+		refresh(state, row)
+	elseif state.input_fixed then
+		M.back(state)
+	end
+end
+
+function M.select(state)
+	local row = current_row(state)
+	if not row then
+		return
+	end
+
+	if not state.input_fixed then
+		if row.kind == "auto" then
+			state.input_format = "auto"
+		elseif row.kind == "unit" then
+			state.input_format = row.name
+		else
+			return
+		end
+		state.input_fixed = true
+		state.hover_output = nil
+		render(state)
+		return
+	end
+
+	if row.kind == "unit" then
+		local input = state.input_format == "auto" and utils.detect_format(state.input_value or "")
+			or state.input_format
+		if not formats.are_compatible(input, row.name) then
+			return
+		end
+		local out = row.name
+		M.close(state)
+		state.on_confirm(state.input_format, out)
+	end
+end
+
+function M.back(state)
+	if not state.input_fixed then
+		return
+	end
+	state.input_fixed = false
+	state.input_format = nil
+	state.hover_output = nil
+	render(state)
+end
+
+local function focus_search(state)
+	vim.ui.input({ prompt = "Search: ", default = state.query }, function(input)
+		if input ~= nil then
+			state.query = input
+			refresh(state)
+		end
+	end)
+end
+
+local function edit_input(state)
+	vim.ui.input({ prompt = "Input value: ", default = state.input_value or "" }, function(input)
+		if input ~= nil and input ~= "" then
+			state.input_value = input
+			render(state)
+		end
+	end)
+end
+
+function M.close(state)
+	if vim.api.nvim_win_is_valid(state.win) then
+		vim.api.nvim_win_close(state.win, true)
+	end
+end
+
+local function cycle_focus(state)
+	-- Tab cycles list -> search -> input -> list via prompts.
+	if state.focus == "list" then
+		state.focus = "search"
+		focus_search(state)
+	elseif state.focus == "search" then
+		state.focus = "input"
+		edit_input(state)
+	else
+		state.focus = "list"
+	end
+end
+
+local function setup_keymaps(state)
+	local opts = { noremap = true, silent = true, buffer = state.buf }
+	local function map(lhs, fn)
+		vim.keymap.set("n", lhs, function()
+			fn(state)
+		end, opts)
+	end
+
+	local function step(delta)
+		return function(s)
+			move(s, delta)
+			update_hover(s)
+		end
+	end
+	map("j", step(1))
+	map("k", step(-1))
+	map("<Down>", step(1))
+	map("<Up>", step(-1))
+	map("l", open_or_select)
+	map("<Right>", open_or_select)
+	map("h", close_or_collapse)
+	map("<Left>", close_or_collapse)
+	map("<Space>", M.select)
+	map("<CR>", M.select)
+	map("<Tab>", cycle_focus)
+	map("/", focus_search)
+	map("<BS>", M.back)
+	map("<Esc>", function(s)
+		if s.input_fixed then
+			M.back(s)
+		else
+			M.close(s)
+		end
+	end)
+	map("q", M.close)
+end
+
+function M.open(origin, on_confirm)
+	local cfg = require("convy").config.window
+	local width = cfg.width or 36
+
+	local buf = vim.api.nvim_create_buf(false, true)
 	vim.bo[buf].bufhidden = "wipe"
 	vim.bo[buf].filetype = "convy"
 
-	-- Calculate window position (centered)
-	local ui = vim.api.nvim_list_uis()[1]
-	local win_width = ui.width
-	local win_height = ui.height
-
-	local col = math.floor((win_width - width) / 2)
-	local row = math.floor((win_height - height) / 2)
-
-	local config_w = require("convy").config.window
-
-	local opts = {
-		relative = "editor",
-		width = width,
-		height = height,
-		col = col,
-		row = row,
-		style = "minimal",
-		border = config_w.border,
-		title = title,
-		title_pos = "center",
-	}
-
-	local win = vim.api.nvim_open_win(buf, true, opts)
-
-	vim.wo[win].winblend = config_w.blend
-	vim.wo[win].cursorline = false
-
-	return buf, win
-end
-
--- Show interactive selection window
-local function build_columns()
-	local columns = {}
-
-	for _, group in ipairs(formats_mod.groups) do
-		local items = {}
-		for _, entry in ipairs(group.formats) do
-			table.insert(items, entry.name)
-		end
-		table.insert(columns, {
-			group_key = group.key,
-			label = group.label,
-			items = items,
-		})
-	end
-
-	return columns
-end
-
-local function calc_column_widths(columns)
-	local widths = {}
-
-	for _, col in ipairs(columns) do
-		local max_w = display_width(col.label)
-		for _, item in ipairs(col.items) do
-			local item_w = display_width(formats_mod.display(item)) + 2
-			if item_w > max_w then
-				max_w = item_w
-			end
-		end
-		table.insert(widths, max_w)
-	end
-
-	return widths
-end
-
-local function render_input_window(buf, columns, col_widths, cursor_on_auto, cursor_col, cursor_row, content_width)
-	local col_gap = 2
-	local left_pad = 2
-
-	local lines = {}
-	local highlights = {}
-
-	table.insert(lines, "  Select INPUT format")
-	table.insert(highlights, { line = 0, hl = "Title" })
-
-	local auto_label = "AUTO"
-	local prefix = cursor_on_auto and "▶ " or ""
-	local auto_text = prefix .. auto_label
-	local auto_display_w = display_width(auto_text)
-	local auto_pad = math.max(0, math.floor((content_width - auto_display_w) / 2))
-	local auto_line = string.rep(" ", left_pad + auto_pad) .. auto_text
-	table.insert(lines, auto_line)
-	do
-		local line_idx = #lines - 1
-		local start_byte = left_pad + auto_pad
-		local end_byte = start_byte + #auto_text
-		if cursor_on_auto then
-			table.insert(highlights, { line = line_idx, hl = "Visual", col_start = start_byte, col_end = end_byte })
-			table.insert(highlights, { line = line_idx, hl = "String", col_start = start_byte, col_end = end_byte })
-		else
-			table.insert(highlights, { line = line_idx, hl = "Identifier", col_start = start_byte, col_end = end_byte })
-		end
-	end
-	table.insert(lines, "")
-
-	local max_items = 0
-	for _, col in ipairs(columns) do
-		if #col.items > max_items then
-			max_items = #col.items
-		end
-	end
-
-	local total_rows = 2 + max_items
-
-	for row_i = 1, total_rows do
-		local line_parts = {}
-		local byte_offset = left_pad
-
-		table.insert(line_parts, string.rep(" ", left_pad))
-
-		for ci, col in ipairs(columns) do
-			local this_col_w = col_widths[ci]
-			local cell = ""
-			local cell_hl = nil
-
-			if row_i == 1 then
-				cell = col.label
-				cell_hl = "Title"
-			elseif row_i == 2 then
-				local label_dw = display_width(col.label)
-				cell = string.rep("─", label_dw)
-				cell_hl = "Comment"
-			else
-				local item_idx = row_i - 2
-				if item_idx <= #col.items then
-					local item = formats_mod.display(col.items[item_idx])
-					local is_selected = not cursor_on_auto and ci == cursor_col and item_idx == cursor_row
-					if is_selected then
-						cell = "▶ " .. item
-						cell_hl = "String"
-					else
-						cell = "" .. item
-						cell_hl = "Identifier"
-					end
-				end
-			end
-
-			local padded = pad_to_width(cell, this_col_w)
-			table.insert(line_parts, padded)
-
-			local line_idx = #lines
-			if cell_hl and cell ~= "" then
-				local cell_byte_start = byte_offset
-				local cell_byte_end = byte_offset + #cell
-
-				table.insert(highlights, {
-					line = line_idx,
-					hl = cell_hl,
-					col_start = cell_byte_start,
-					col_end = cell_byte_end,
-				})
-
-				if row_i > 2 then
-					local item_idx = row_i - 2
-					if not cursor_on_auto and ci == cursor_col and item_idx == cursor_row then
-						table.insert(highlights, {
-							line = line_idx,
-							hl = "Visual",
-							col_start = cell_byte_start,
-							col_end = cell_byte_start + #padded,
-						})
-					end
-				end
-			end
-
-			byte_offset = byte_offset + #padded
-
-			if ci < #columns then
-				table.insert(line_parts, string.rep(" ", col_gap))
-				byte_offset = byte_offset + col_gap
-			end
-		end
-
-		table.insert(lines, table.concat(line_parts))
-	end
-
-	table.insert(lines, "")
-	table.insert(lines, "  [j/k] Up/Down  [h/l/Tab] Column  [Enter] Select  [Esc/q] Cancel")
-	table.insert(highlights, { line = #lines - 1, hl = "Comment", col_start = 0, col_end = -1 })
-
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-
-	for _, hl in ipairs(highlights) do
-		local col_start = hl.col_start or 0
-		local col_end = hl.col_end or -1
-		vim.api.nvim_buf_add_highlight(buf, -1, hl.hl, hl.line, col_start, col_end)
-	end
-end
-
-local function render_output_window(buf, output_formats, input_format, cursor_row)
-	local lines = {}
-	local highlights = {}
-
-	table.insert(lines, "  Select OUTPUT format")
-	table.insert(highlights, { line = 0, hl = "Title" })
-	table.insert(lines, string.format("  (Input: %s)", formats_mod.display(input_format)))
-	table.insert(highlights, { line = 1, hl = "Comment" })
-	table.insert(lines, "")
-
-	for i, format in ipairs(output_formats) do
-		local line
-		local display = formats_mod.display(format)
-		if i == cursor_row then
-			line = string.format(" ▶ %s", display)
-			table.insert(highlights, { line = #lines, hl = "Visual", text_hl = "String" })
-		else
-			line = string.format("   %s", display)
-			table.insert(highlights, { line = #lines, hl = "Normal", text_hl = "Identifier" })
-		end
-		table.insert(lines, line)
-	end
-
-	table.insert(lines, "")
-	table.insert(lines, "  [Enter/l] Select  [BS/h] Back  [Esc/q] Cancel")
-	table.insert(highlights, { line = #lines - 1, hl = "Comment" })
-
-	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-
-	for _, hl in ipairs(highlights) do
-		if hl.text_hl then
-			local start_col = 3
-			vim.api.nvim_buf_add_highlight(buf, -1, hl.text_hl, hl.line, start_col, -1)
-		end
-		if hl.hl and hl.hl ~= "Normal" then
-			local col_start = hl.col_start or 0
-			local col_end = hl.col_end or -1
-			vim.api.nvim_buf_add_highlight(buf, -1, hl.hl, hl.line, col_start, col_end)
-		end
-	end
-end
-
-function M.show_format_selector(callback, source_text)
-	local columns = build_columns()
-	local col_widths = calc_column_widths(columns)
-	local col_gap = 2
-	local left_pad = 2
-	local right_pad = 2
+	vim.cmd(cfg.position == "right" and "botright vsplit" or "topleft vsplit")
+	local win = vim.api.nvim_get_current_win()
+	vim.api.nvim_win_set_buf(win, buf)
+	vim.api.nvim_win_set_width(win, width)
+	vim.wo[win].winfixwidth = true
+	vim.wo[win].number = false
+	vim.wo[win].relativenumber = false
+	vim.wo[win].cursorline = true
+	vim.wo[win].wrap = false
 
 	local state = {
-		step = 1,
+		buf = buf,
+		win = win,
+		width = width,
+		query = "",
+		expanded = {},
+		focus = "list",
+		input_fixed = false,
 		input_format = nil,
-		output_formats = nil,
-		col = 0,
-		row = 1,
-		cursor = 1,
+		input_value = origin.text,
+		hover_format = "auto",
+		hover_output = nil,
+		on_confirm = on_confirm,
 	}
 
-	local buf, win
+	refresh(state)
+	setup_keymaps(state)
 
-	local content_width = 0
-	for _, w in ipairs(col_widths) do
-		content_width = content_width + w
-	end
-	content_width = content_width + (#columns - 1) * col_gap
-	local total_width = left_pad + content_width + right_pad
-
-	local max_items = 0
-	for _, col in ipairs(columns) do
-		if #col.items > max_items then
-			max_items = #col.items
-		end
-	end
-	local total_height = 3 + 1 + 1 + 2 + max_items + 1
-
-	local function render()
-		vim.bo[buf].modifiable = true
-
-		if state.step == 1 then
-			local on_auto = (state.col == 0)
-			render_input_window(buf, columns, col_widths, on_auto, state.col, state.row, content_width)
-		else
-			render_output_window(buf, state.output_formats, state.input_format, state.cursor)
-		end
-
-		vim.bo[buf].modifiable = false
-	end
-
-	local function close()
-		if vim.api.nvim_win_is_valid(win) then
-			vim.api.nvim_win_close(win, true)
+	-- Start on the "auto" row.
+	for line, row in pairs(state.line_map) do
+		if row and row.kind == "auto" then
+			place_cursor(state, line)
+			break
 		end
 	end
 
-	local function get_selected_format()
-		if state.col == 0 then
-			return "auto"
-		end
-		return columns[state.col].items[state.row]
-	end
-
-	local function select_format()
-		if state.step == 1 then
-			local selected_format = get_selected_format()
-			state.input_format = selected_format
-
-			if selected_format == "auto" then
-				if source_text and source_text ~= "" then
-					local utils = require("convy.utils")
-					local detected = utils.detect_format(source_text)
-					state.output_formats = formats_mod.get_compatible_outputs(detected)
-				else
-					state.output_formats = formats_mod.get_output_formats("auto")
-				end
-			else
-				state.output_formats = formats_mod.get_compatible_outputs(selected_format)
-			end
-
-			if #state.output_formats == 0 then
-				close()
-				return
-			end
-
-			state.step = 2
-			state.cursor = 1
-
-			local new_height = #state.output_formats + 6
-			local new_width = 50
-
-			vim.api.nvim_win_set_config(win, {
-				relative = "editor",
-				width = new_width,
-				height = new_height,
-				col = math.floor((vim.o.columns - new_width) / 2),
-				row = math.floor((vim.o.lines - new_height) / 2),
-			})
-
-			render()
-		else
-			local selected = state.output_formats[state.cursor]
-			close()
-			callback(state.input_format, selected)
-		end
-	end
-
-	local function move_vertical(delta)
-		if state.step == 1 then
-			if state.col == 0 then
-				if delta > 0 then
-					state.col = 1
-					state.row = 1
-				else
-					state.col = 1
-					state.row = #columns[1].items
-				end
-			else
-				local new_row = state.row + delta
-				if new_row < 1 then
-					state.col = 0
-					state.row = 1
-				elseif new_row > #columns[state.col].items then
-					state.col = 0
-					state.row = 1
-				else
-					state.row = new_row
-				end
-			end
-		else
-			state.cursor = state.cursor + delta
-			if state.cursor < 1 then
-				state.cursor = #state.output_formats
-			elseif state.cursor > #state.output_formats then
-				state.cursor = 1
-			end
-		end
-
-		render()
-	end
-
-	local function move_horizontal(delta)
-		if state.step ~= 1 then
-			return
-		end
-
-		if state.col == 0 then
-			if delta > 0 then
-				state.col = 1
-			else
-				state.col = #columns
-			end
-			state.row = 1
-		else
-			local new_col = state.col + delta
-			if new_col < 1 then
-				new_col = #columns
-			elseif new_col > #columns then
-				new_col = 1
-			end
-
-			state.col = new_col
-
-			if state.row > #columns[state.col].items then
-				state.row = #columns[state.col].items
-			end
-		end
-
-		render()
-	end
-
-	local function back_action()
-		if state.step == 2 then
-			state.step = 1
-			state.input_format = nil
-
-			vim.api.nvim_win_set_config(win, {
-				relative = "editor",
-				width = total_width,
-				height = total_height,
-				col = math.floor((vim.o.columns - total_width) / 2),
-				row = math.floor((vim.o.lines - total_height) / 2),
-			})
-
-			render()
-		end
-	end
-
-	local function setup_keymaps()
-		local opts = { noremap = true, silent = true, buffer = buf }
-
-		vim.keymap.set("n", "j", function()
-			move_vertical(1)
-		end, opts)
-		vim.keymap.set("n", "k", function()
-			move_vertical(-1)
-		end, opts)
-		vim.keymap.set("n", "<Down>", function()
-			move_vertical(1)
-		end, opts)
-		vim.keymap.set("n", "<Up>", function()
-			move_vertical(-1)
-		end, opts)
-		vim.keymap.set("n", "l", function()
-			if state.step == 1 then
-				move_horizontal(1)
-			else
-				select_format()
-			end
-		end, opts)
-		vim.keymap.set("n", "h", function()
-			if state.step == 1 then
-				move_horizontal(-1)
-			else
-				back_action()
-			end
-		end, opts)
-		vim.keymap.set("n", "<Left>", function()
-			move_horizontal(-1)
-		end, opts)
-		vim.keymap.set("n", "<Right>", function()
-			move_horizontal(1)
-		end, opts)
-		vim.keymap.set("n", "<Tab>", function()
-			move_horizontal(1)
-		end, opts)
-		vim.keymap.set("n", "<S-Tab>", function()
-			move_horizontal(-1)
-		end, opts)
-		vim.keymap.set("n", "<CR>", select_format, opts)
-		vim.keymap.set("n", "<Esc>", close, opts)
-		vim.keymap.set("n", "q", close, opts)
-		vim.keymap.set("n", "<BS>", back_action, opts)
-	end
-
-	-- Create window and render
-	buf, win = create_float_win(total_width, total_height, " Convy ")
-	render()
-	setup_keymaps()
+	vim.api.nvim_create_autocmd("CursorMoved", {
+		buffer = buf,
+		callback = function()
+			clamp_cursor(state)
+			update_hover(state)
+		end,
+	})
 
 	local on_open = require("convy").config.window.on_open
 	if type(on_open) == "function" then
 		on_open(buf, win)
 	end
 
-	-- Auto-close on leaving window
 	vim.api.nvim_create_autocmd({ "BufLeave", "WinLeave" }, {
 		buffer = buf,
 		once = true,
-		callback = close,
+		callback = function()
+			M.close(state)
+		end,
 	})
 end
 

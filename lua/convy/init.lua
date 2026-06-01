@@ -8,8 +8,8 @@ M.config = {
 	separator = " ",
 	css_base_font_size = 16,
 	window = {
-		blend = 25,
-		border = "rounded",
+		position = "left",
+		width = 36,
 		on_open = nil,
 	},
 }
@@ -99,11 +99,9 @@ end
 
 function M.show_selector(use_visual)
 	local origin = capture_origin(use_visual)
-	require("convy.ui").show_format_selector(function(input_format, output_format)
-		if input_format and output_format then
-			M.convert_origin(origin, input_format, output_format)
-		end
-	end, origin.text)
+	require("convy.ui").open(origin, function(input_format, output_format)
+		M.convert_origin(origin, input_format, output_format)
+	end)
 end
 
 return M
