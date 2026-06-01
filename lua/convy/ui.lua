@@ -65,8 +65,7 @@ local function compute_preview(state)
 	end
 
 	local detected = input == "auto" and utils.detect_format(value) or input
-	local number = value:match("^%s*(%-?[%d%.]+)") or value
-	local in_line = { unit = formats.display(detected), value = number }
+	local in_line = { unit = formats.display(detected), value = value }
 
 	if not state.input_fixed or not state.hover_output then
 		return in_line, nil
