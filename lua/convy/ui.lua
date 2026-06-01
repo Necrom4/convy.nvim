@@ -399,12 +399,17 @@ function M.open(origin, on_confirm)
 	vim.wo[win].cursorline = true
 	vim.wo[win].wrap = false
 
+	local expanded = {}
+	for _, group in ipairs(formats.groups) do
+		expanded[group.key] = true
+	end
+
 	local state = {
 		buf = buf,
 		win = win,
 		width = width,
 		query = "",
-		expanded = {},
+		expanded = expanded,
 		focus = "list",
 		input_fixed = false,
 		input_format = nil,
