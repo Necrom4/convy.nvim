@@ -3,6 +3,7 @@ local base64 = require("convy.format-logic.base64")
 local hash = require("convy.format-logic.hash")
 local morse = require("convy.format-logic.morse")
 local braille = require("convy.format-logic.braille")
+local nato = require("convy.format-logic.nato")
 
 local function push_bytes(numbers, str)
 	for i = 1, #str do
@@ -42,6 +43,8 @@ local function parse_input(text, input_format)
 		error("can't decode hash formats", 0)
 	elseif input_format == "morse" then
 		push_bytes(numbers, morse.to_text(text))
+	elseif input_format == "nato" then
+		push_bytes(numbers, nato.to_text(text))
 	elseif input_format == "braille" then
 		push_bytes(numbers, braille.to_text(text))
 	else
@@ -110,6 +113,8 @@ local function format_output(numbers, output_format)
 		return hash.md5(to_bytes(numbers))
 	elseif output_format == "morse" then
 		return morse.from_text(to_bytes(numbers))
+	elseif output_format == "nato" then
+		return nato.from_text(to_bytes(numbers))
 	elseif output_format == "braille" then
 		return braille.from_text(to_bytes(numbers))
 	else

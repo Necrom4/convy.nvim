@@ -20,6 +20,7 @@ M.groups = {
 			{ name = "md5" },
 			{ name = "morse" },
 			{ name = "braille" },
+			{ name = "nato" },
 		},
 	},
 	{
