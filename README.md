@@ -10,7 +10,7 @@ A powerful Neovim plugin to convert between various formats
   - **Encoding**: `ascii`, `bin`, `dec`, `hex`, `oct`, `b64`, `sha256`, `md5`, `morse`, `braille`, `nato`
   - **Data size**: `B`, `KB`, `MB`, `GB`, `TB` (SI), `KiB`, `MiB`, `GiB`, `TiB` (IEC)
   - **Data rate**: `bps`, `kbps`, `mbps`, `gbps`, `tbps`
-  - **Length**: `px`, `em`, `rem`, `pt`, `pica`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`, `thou`, `line`, `poppyseed`, `barleycorn`, `pyramidinch`, `nail`, `palm`, `hand`, `finger`, `link`, `span`, `cubit`, `megalithicyard`, `clothyard`, `ell`, `fathom`, `rod`, `chain`, `shackle`, `bolt`, `cable`, `furlong`, `nmi`, `league`, `angstrom`, `ls`, `au`, `ly`, `pc`
+  - **Length**: `px`, `em`, `rem`, `pt`, `pica`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`, `barleycorn`, `bolt`, `cable`, `chain`, `clothyard`, `cubit`, `ell`, `fathom`, `finger`, `furlong`, `hand`, `league`, `line`, `link`, `megalithicyard`, `nail`, `nmi`, `palm`, `poppyseed`, `pyramidinch`, `rod`, `shackle`, `span`, `thou`, `angstrom`, `ls`, `au`, `ly`, `pc`
   - **Area**: `mm2`, `cm2`, `m2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ha`, `acre`
   - **Volume**: `ml`, `cl`, `dl`, `l`, `m3`, `tsp`, `tbsp`, `floz`, `cup`, `pint`, `qt`, `gal`
   - **Angle**: `deg`, `rad`, `grad`, `turn`
