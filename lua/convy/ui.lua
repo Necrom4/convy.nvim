@@ -6,8 +6,12 @@ local utils = require("convy.utils")
 
 local ns = vim.api.nvim_create_namespace("convy")
 
+local HEADER_LINES = 3 -- blank, title, divider
+local FOOTER_LINES = 4 -- divider, input, output, help
+
 local function setup_highlights()
 	local defs = {
+		ConvyTitle = { fg = "Cyan", bold = true },
 		ConvyAuto = { link = "Identifier" },
 		ConvyGroup = { link = "Title" },
 		ConvyUnit = { link = "Normal" },
@@ -15,6 +19,7 @@ local function setup_highlights()
 		ConvyStrong = { link = "String" },
 		ConvyHover = { link = "String" },
 		ConvyLabel = { link = "Comment" },
+		ConvyPick = { underline = true },
 	}
 	for name, def in pairs(defs) do
 		if vim.fn.hlexists(name) == 0 then
@@ -22,6 +27,10 @@ local function setup_highlights()
 			vim.api.nvim_set_hl(0, name, def)
 		end
 	end
+end
+
+local function divider(width)
+	return "  " .. string.rep("─", math.max(0, width - 4))
 end
 
 -- Build the flat list of tree rows from the registry, applying expand state
@@ -52,7 +61,7 @@ local function build_rows(state)
 	return rows
 end
 
--- Returns the input and output result lines as { unit, value } pairs.
+-- Returns the input and output result lines as { unit, value } pairs (or nil).
 local function compute_preview(state)
 	local value = state.input_value
 	if not value or value == "" then
@@ -78,7 +87,6 @@ local function compute_preview(state)
 	return in_line, { unit = formats.display(state.hover_output), value = result }
 end
 
--- The group whose units stay active once an input is fixed.
 local function active_group(state)
 	if not state.input_fixed then
 		return nil
@@ -91,59 +99,89 @@ local function is_tree_row(row)
 	return row and (row.kind == "auto" or row.kind == "group" or row.kind == "unit")
 end
 
--- The cursor line is the source of truth for the current row.
-local function current_row(state)
+local function tree_height(state)
+	local h = vim.api.nvim_win_get_height(state.win)
+	return math.max(1, h - HEADER_LINES - FOOTER_LINES)
+end
+
+-- Index (into state.rows) of the currently selected tree row.
+local function selected_index(state)
 	local line = vim.api.nvim_win_get_cursor(state.win)[1]
-	return state.line_map and state.line_map[line]
+	return state.line_map[line]
+end
+
+local function current_row(state)
+	local idx = selected_index(state)
+	return idx and state.rows[idx]
 end
 
 local function render(state)
 	setup_highlights()
-	local lines = {}
-	local hls = {} -- { line, col_start, col_end, hl }
+	local width = state.width
+	local vh = tree_height(state)
+	local lines, hls = {}, {}
 	state.line_map = {}
 
-	local function add(text, row)
-		table.insert(lines, text)
-		state.line_map[#lines] = row
-		return #lines - 1
-	end
+	-- Header
+	local title = "convy.nvim"
+	local pad = math.max(0, math.floor((width - #title) / 2))
+	table.insert(lines, "")
+	table.insert(lines, string.rep(" ", pad) .. title)
+	table.insert(hls, { line = 1, s = pad, e = pad + #title, hl = "ConvyTitle" })
+	table.insert(lines, divider(width))
 
-	-- Tree section
+	-- Tree viewport: rows[scroll .. scroll + vh - 1]
 	local agroup = active_group(state)
-	local cursor_line = vim.api.nvim_win_is_valid(state.win) and vim.api.nvim_win_get_cursor(state.win)[1]
-	for _, row in ipairs(state.rows) do
-		local hl
-		if row.kind == "auto" then
-			add("  auto", row)
-			hl = "ConvyAuto"
-		elseif row.kind == "group" then
-			local arrow = state.expanded[row.key] and "▾" or "▸"
-			add(string.format("  %s %s", arrow, row.label), row)
-			hl = "ConvyGroup"
-		elseif row.kind == "unit" then
-			add("      " .. formats.display(row.name), row)
-			local dim = agroup ~= nil and row.group ~= agroup
-			hl = dim and "ConvyDim" or "ConvyUnit"
+	local total = #state.rows
+	state.scroll = math.max(1, math.min(state.scroll, math.max(1, total - vh + 1)))
+
+	for i = 0, vh - 1 do
+		local idx = state.scroll + i
+		local row = state.rows[idx]
+		local buf_line = HEADER_LINES + i + 1
+		local text, hl = "", nil
+		if row then
+			if row.kind == "auto" then
+				text, hl = "  auto", "ConvyAuto"
+			elseif row.kind == "group" then
+				local arrow = state.expanded[row.key] and "▾" or "▸"
+				text, hl = string.format("  %s %s", arrow, row.label), "ConvyGroup"
+			elseif row.kind == "unit" then
+				text = "      " .. formats.display(row.name)
+				hl = (agroup ~= nil and row.group ~= agroup) and "ConvyDim" or "ConvyUnit"
+			end
+			state.line_map[buf_line] = idx
+			if idx == state.selected then
+				hl = "ConvyHover"
+			end
 		end
-		if #lines == cursor_line then
-			hl = "ConvyHover"
+		table.insert(lines, text)
+		if hl then
+			table.insert(hls, { line = buf_line - 1, s = 0, e = -1, hl = hl })
 		end
-		table.insert(hls, { line = #lines - 1, col_start = 0, col_end = -1, hl = hl })
 	end
 
-	-- Result section: "<unit>: <value>", unit strong, value normal.
-	add("  " .. string.rep("─", state.width - 4), nil)
+	-- Footer
+	table.insert(lines, divider(width))
 	local in_res, out_res = compute_preview(state)
-	local function add_result(res, row)
-		local text = res and string.format("  %s: %s", res.unit, res.value) or "  "
-		local l = add(text, row)
+	local function add_result(res, picking)
+		local unit = res and res.unit or "..."
+		local value = res and res.value or "..."
+		table.insert(lines, string.format("  %s: %s", unit, value))
+		local l = #lines - 1
 		if res then
-			table.insert(hls, { line = l, col_start = 2, col_end = 2 + #res.unit, hl = "ConvyStrong" })
+			table.insert(hls, { line = l, s = 2, e = 2 + #unit, hl = "ConvyStrong" })
+		else
+			table.insert(hls, { line = l, s = 2, e = -1, hl = "ConvyDim" })
+		end
+		if picking then
+			table.insert(hls, { line = l, s = 2, e = 2 + #unit, hl = "ConvyPick" })
 		end
 	end
-	add_result(in_res, { kind = "input" })
-	add_result(out_res, nil)
+	add_result(in_res, not state.input_fixed)
+	add_result(out_res, state.input_fixed)
+	table.insert(lines, "  / search  i input  ⏎ select")
+	table.insert(hls, { line = #lines - 1, s = 0, e = -1, hl = "ConvyLabel" })
 
 	vim.bo[state.buf].modifiable = true
 	vim.api.nvim_buf_set_lines(state.buf, 0, -1, false, lines)
@@ -151,72 +189,31 @@ local function render(state)
 
 	vim.api.nvim_buf_clear_namespace(state.buf, ns, 0, -1)
 	for _, h in ipairs(hls) do
-		vim.api.nvim_buf_add_highlight(state.buf, ns, h.hl, h.line, h.col_start, h.col_end)
+		vim.api.nvim_buf_add_highlight(state.buf, ns, h.hl, h.line, h.s, h.e)
 	end
 end
 
-local function place_cursor(state, line)
+-- Place the cursor on the buffer line showing tree index `idx`, scrolling
+-- the viewport if needed so the selection stays visible.
+local function focus_index(state, idx)
+	local total = #state.rows
+	idx = math.max(1, math.min(idx, total))
+	state.selected = idx
+
+	local vh = tree_height(state)
+	if idx < state.scroll then
+		state.scroll = idx
+	elseif idx > state.scroll + vh - 1 then
+		state.scroll = idx - vh + 1
+	end
+
+	render(state)
+	local line = HEADER_LINES + (idx - state.scroll) + 1
 	pcall(vim.api.nvim_win_set_cursor, state.win, { line, 0 })
 end
 
--- Keep the cursor on a selectable tree row, snapping off dividers/sections.
-local function clamp_cursor(state)
-	local total = vim.api.nvim_buf_line_count(state.buf)
-	local line = vim.api.nvim_win_get_cursor(state.win)[1]
-	if is_tree_row(state.line_map[line]) then
-		return
-	end
-	for off = 0, total do
-		for _, l in ipairs({ line + off, line - off }) do
-			if l >= 1 and l <= total and is_tree_row(state.line_map[l]) then
-				place_cursor(state, l)
-				return
-			end
-		end
-	end
-end
-
--- Buffer line (1-indexed) of a row, matched by identity.
-local function line_of(state, row)
-	for line, mapped in pairs(state.line_map) do
-		if mapped == row then
-			return line
-		end
-	end
-end
-
--- Move the cursor to the next/previous selectable tree row.
-local function move(state, delta)
-	local total = vim.api.nvim_buf_line_count(state.buf)
-	local line = vim.api.nvim_win_get_cursor(state.win)[1]
-	local l = line + delta
-	while l >= 1 and l <= total do
-		if is_tree_row(state.line_map[l]) then
-			place_cursor(state, l)
-			return
-		end
-		l = l + delta
-	end
-end
-
--- Move the cursor to the next/previous group header row.
-local function move_group(state, delta)
-	local total = vim.api.nvim_buf_line_count(state.buf)
-	local line = vim.api.nvim_win_get_cursor(state.win)[1]
-	local l = line + delta
-	while l >= 1 and l <= total do
-		local row = state.line_map[l]
-		if row and row.kind == "group" then
-			place_cursor(state, l)
-			return
-		end
-		l = l + delta
-	end
-end
-
--- Recompute the hovered unit/output from the row under the cursor.
 local function update_hover(state)
-	local row = current_row(state)
+	local row = state.rows[state.selected]
 	if not row then
 		return
 	end
@@ -234,15 +231,47 @@ local function update_hover(state)
 	render(state)
 end
 
-local function refresh(state, keep_row)
-	state.rows = build_rows(state)
-	render(state)
-	if keep_row then
-		local line = line_of(state, keep_row)
-		if line then
-			place_cursor(state, line)
+local function move(state, delta)
+	local total = #state.rows
+	local idx = state.selected + delta
+	while idx >= 1 and idx <= total do
+		if is_tree_row(state.rows[idx]) then
+			focus_index(state, idx)
+			update_hover(state)
+			return
 		end
+		idx = idx + delta
 	end
+end
+
+local function move_group(state, delta)
+	local total = #state.rows
+	local idx = state.selected + delta
+	while idx >= 1 and idx <= total do
+		if state.rows[idx].kind == "group" then
+			focus_index(state, idx)
+			update_hover(state)
+			return
+		end
+		idx = idx + delta
+	end
+end
+
+-- Re-select the row matching `keep` (by identity) after a rebuild.
+local function refresh(state, keep)
+	state.rows = build_rows(state)
+	local idx = 1
+	if keep then
+		for i, r in ipairs(state.rows) do
+			if r == keep then
+				idx = i
+				break
+			end
+		end
+	else
+		idx = math.min(state.selected or 1, #state.rows)
+	end
+	focus_index(state, idx)
 	update_hover(state)
 end
 
@@ -252,8 +281,6 @@ local function open_or_select(state)
 		if not state.expanded[row.key] then
 			state.expanded[row.key] = true
 			refresh(state, row)
-		else
-			M.select(state)
 		end
 		return
 	end
@@ -298,16 +325,16 @@ local function close_or_collapse(state)
 		return
 	end
 	if row.kind == "unit" then
-		local group_row
 		state.expanded[row.group] = false
-		state.rows = build_rows(state)
-		for _, r in ipairs(state.rows) do
+		local rows = build_rows(state)
+		local keep
+		for _, r in ipairs(rows) do
 			if r.kind == "group" and r.key == row.group then
-				group_row = r
+				keep = r
 				break
 			end
 		end
-		refresh(state, group_row)
+		refresh(state, keep)
 	elseif row.kind == "group" and state.expanded[row.key] then
 		state.expanded[row.key] = false
 		refresh(state, row)
@@ -342,7 +369,7 @@ function M.select(state)
 		end
 		local out = row.name
 		M.close(state)
-		state.on_confirm(state.input_format, out)
+		state.on_confirm(state.input_format, out, state.input_value)
 	end
 end
 
@@ -388,29 +415,17 @@ local function setup_keymaps(state)
 		end, opts)
 	end
 
-	local function step(delta)
-		return function(s)
-			move(s, delta)
-			update_hover(s)
-		end
-	end
-	map("j", step(1))
-	map("k", step(-1))
-	map("<Down>", step(1))
-	map("<Up>", step(-1))
+	map("j", function(s) move(s, 1) end)
+	map("k", function(s) move(s, -1) end)
+	map("<Down>", function(s) move(s, 1) end)
+	map("<Up>", function(s) move(s, -1) end)
 	map("l", open_or_select)
 	map("<Right>", open_or_select)
 	map("h", close_or_collapse)
 	map("<Left>", close_or_collapse)
 	map("za", toggle_all)
-	map("<Tab>", function(s)
-		move_group(s, 1)
-		update_hover(s)
-	end)
-	map("<S-Tab>", function(s)
-		move_group(s, -1)
-		update_hover(s)
-	end)
+	map("<Tab>", function(s) move_group(s, 1) end)
+	map("<S-Tab>", function(s) move_group(s, -1) end)
 	map("<Space>", select_or_toggle)
 	map("<CR>", select_or_toggle)
 	map("/", focus_search)
@@ -458,6 +473,9 @@ function M.open(origin, on_confirm)
 		width = width,
 		query = "",
 		expanded = expanded,
+		rows = {},
+		scroll = 1,
+		selected = 1,
 		input_fixed = false,
 		input_format = nil,
 		input_value = origin.text,
@@ -466,22 +484,22 @@ function M.open(origin, on_confirm)
 		on_confirm = on_confirm,
 	}
 
-	refresh(state)
+	state.rows = build_rows(state)
+	focus_index(state, 1)
+	update_hover(state)
 	setup_keymaps(state)
 
-	-- Start on the "auto" row.
-	for line, row in pairs(state.line_map) do
-		if row and row.kind == "auto" then
-			place_cursor(state, line)
-			break
-		end
-	end
-
+	-- Keep the cursor inside the tree region.
 	vim.api.nvim_create_autocmd("CursorMoved", {
 		buffer = buf,
 		callback = function()
-			clamp_cursor(state)
-			update_hover(state)
+			local line = vim.api.nvim_win_get_cursor(win)[1]
+			if not state.line_map[line] then
+				focus_index(state, state.selected)
+			elseif state.line_map[line] ~= state.selected then
+				state.selected = state.line_map[line]
+				update_hover(state)
+			end
 		end,
 	})
 
