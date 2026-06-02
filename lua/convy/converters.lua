@@ -4,13 +4,21 @@ local formats = require("convy.formats")
 
 local group_modules = {
 	angle = "convy.converters.linear",
-	color = "convy.converters.color",
-	datasize = "convy.converters.linear",
-	length = "convy.converters.linear",
 	area = "convy.converters.linear",
-	temperature = "convy.converters.temperature",
+	color = "convy.converters.color",
+	datarate = "convy.converters.linear",
+	datasize = "convy.converters.linear",
 	encoding = "convy.converters.encoding",
+	energy = "convy.converters.linear",
+	frequency = "convy.converters.linear",
+	length = "convy.converters.linear",
+	mass = "convy.converters.linear",
+	power = "convy.converters.linear",
+	pressure = "convy.converters.linear",
+	speed = "convy.converters.linear",
+	temperature = "convy.converters.temperature",
 	time = "convy.converters.linear",
+	volume = "convy.converters.linear",
 }
 
 function M.convert(text, input_format, output_format)
