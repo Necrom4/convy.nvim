@@ -46,9 +46,10 @@ local function capture_origin(use_visual)
 end
 
 -- Convert `text` and write the result back at the captured origin position.
--- `input_format` may be "auto" to detect from the text.
-function M.convert_origin(origin, input_format, output_format)
-	local text = origin.text
+-- `input_format` may be "auto" to detect from the text. `value` overrides the
+-- captured text when the user edited the input in the selector.
+function M.convert_origin(origin, input_format, output_format, value)
+	local text = value or origin.text
 	if not text or text == "" then
 		utils.notify("No text to convert", vim.log.levels.WARN)
 		return
@@ -99,8 +100,8 @@ end
 
 function M.show_selector(use_visual)
 	local origin = capture_origin(use_visual)
-	require("convy.ui").open(origin, function(input_format, output_format)
-		M.convert_origin(origin, input_format, output_format)
+	require("convy.ui").open(origin, function(input_format, output_format, value)
+		M.convert_origin(origin, input_format, output_format, value)
 	end)
 end
 
