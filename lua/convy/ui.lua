@@ -258,20 +258,32 @@ local function move_group(state, delta)
 	end
 end
 
--- Re-select the row matching `keep` (by identity) after a rebuild.
+local function same_row(a, b)
+	if not a or not b or a.kind ~= b.kind then
+		return false
+	end
+	if a.kind == "group" then
+		return a.key == b.key
+	end
+	if a.kind == "unit" then
+		return a.name == b.name
+	end
+	return true
+end
+
+-- Re-select the row matching `keep` (by content) after a rebuild.
 local function refresh(state, keep)
 	state.rows = build_rows(state)
-	local idx = 1
+	local idx
 	if keep then
 		for i, r in ipairs(state.rows) do
-			if r == keep then
+			if same_row(r, keep) then
 				idx = i
 				break
 			end
 		end
-	else
-		idx = math.min(state.selected or 1, #state.rows)
 	end
+	idx = idx or math.min(state.selected or 1, #state.rows)
 	focus_index(state, idx)
 	update_hover(state)
 end
