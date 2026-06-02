@@ -81,6 +81,12 @@ M.groups = {
 			{ name = "furlong", suffix = "furlong", factor = 201.168 },
 			{ name = "league", suffix = "league", factor = 4828.032 },
 			{ name = "nmi", suffix = "nmi", factor = 1852 },
+			-- Astronomical
+			{ name = "angstrom", suffix = "angstrom", factor = 1e-10 },
+			{ name = "ls", suffix = "ls", factor = 299792458 },
+			{ name = "au", suffix = "au", factor = 149597870700 },
+			{ name = "ly", suffix = "ly", factor = 9460730472580800 },
+			{ name = "pc", suffix = "pc", factor = 648000 / math.pi * 149597870700 },
 		},
 	},
 	{
