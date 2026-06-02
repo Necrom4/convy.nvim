@@ -10,6 +10,7 @@ A powerful Neovim plugin to convert between various formats
   - **Text**: `ascii`, `bin`, `dec`, `hex`, `oct`, `b64`, `sha256`, `md5`, `morse`
   - **Data** sizes: `B`, `KB`, `MB`, `GB`, `TB` (SI), `KiB`, `MiB`, `GiB`, `TiB` (IEC)
   - **Lengths**: `px`, `rem`, `em`, `pt`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`, `barleycorn`, `hand`, `fathom`, `chain`, `furlong`, `league`, `nmi`
+  - **Area**: `mm2`, `cm2`, `m2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `hectare`, `acre`
   - **Colors**: `hex`, `rgb`, `hsl`, `tailwind`
   - **Time**: `ns`, `us`, `ms`, `s`, `min`, `h`, `day`, `week`, `fortnight`
   - **Angles**: `deg`, `rad`, `grad`, `turn`

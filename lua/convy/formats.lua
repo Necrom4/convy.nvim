@@ -69,6 +69,27 @@ M.groups = {
 		},
 	},
 	{
+		key = "area",
+		label = "Area",
+		kind = "linear",
+		decimals = 6,
+		formats = {
+			-- Metric (factor = length-factor squared, base = m²)
+			{ name = "mm2", suffix = "mm2", factor = 0.001 ^ 2 },
+			{ name = "cm2", suffix = "cm2", factor = 0.01 ^ 2 },
+			{ name = "m2", suffix = "m2", factor = 1 },
+			{ name = "km2", suffix = "km2", factor = 1000 ^ 2 },
+			-- Imperial
+			{ name = "in2", suffix = "in2", factor = 0.0254 ^ 2 },
+			{ name = "ft2", suffix = "ft2", factor = 0.3048 ^ 2 },
+			{ name = "yd2", suffix = "yd2", factor = 0.9144 ^ 2 },
+			{ name = "mi2", suffix = "mi2", factor = 1609.344 ^ 2 },
+			-- Land
+			{ name = "hectare", suffix = "ha", factor = 10000 },
+			{ name = "acre", suffix = "acre", factor = 4046.8564224 },
+		},
+	},
+	{
 		key = "color",
 		label = "Color",
 		kind = "color",

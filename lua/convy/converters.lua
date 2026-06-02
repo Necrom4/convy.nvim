@@ -7,6 +7,7 @@ local group_modules = {
 	color = "convy.converters.color",
 	datasize = "convy.converters.linear",
 	length = "convy.converters.linear",
+	area = "convy.converters.linear",
 	temperature = "convy.converters.temperature",
 	encoding = "convy.converters.encoding",
 	time = "convy.converters.linear",
