@@ -7,22 +7,22 @@ A powerful Neovim plugin to convert between various formats
 ## ✨ Features
 
 - 🔄 Multiple Formats: from ASCII to binary, Morse and Freedom Units
-  - **Text**: `ascii`, `bin`, `dec`, `hex`, `oct`, `b64`, `sha256`, `md5`, `morse`
-  - **Data sizes**: `B`, `KB`, `MB`, `GB`, `TB` (SI), `KiB`, `MiB`, `GiB`, `TiB` (IEC)
-  - **Data rates**: `bps`, `kbps`, `mbps`, `gbps`, `tbps`
-  - **Lengths**: `px`, `rem`, `em`, `pt`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`, `barleycorn`, `hand`, `fathom`, `chain`, `furlong`, `league`, `nmi`
-  - **Areas**: `mm2`, `cm2`, `m2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ha`, `acre`
-  - **Volumes**: `ml`, `cl`, `dl`, `l`, `m3`, `tsp`, `tbsp`, `floz`, `cup`, `pint`, `qt`, `gal`
-  - **Angles**: `deg`, `rad`, `grad`, `turn`
+  - **Encoding**: `ascii`, `bin`, `dec`, `hex`, `oct`, `b64`, `sha256`, `md5`, `morse`
+  - **Data size**: `B`, `KB`, `MB`, `GB`, `TB` (SI), `KiB`, `MiB`, `GiB`, `TiB` (IEC)
+  - **Data rate**: `bps`, `kbps`, `mbps`, `gbps`, `tbps`
+  - **Length**: `px`, `rem`, `em`, `pt`, `mm`, `cm`, `m`, `km`, `in`, `ft`, `yd`, `mi`, `barleycorn`, `hand`, `fathom`, `chain`, `furlong`, `league`, `nmi`
+  - **Area**: `mm2`, `cm2`, `m2`, `km2`, `in2`, `ft2`, `yd2`, `mi2`, `ha`, `acre`
+  - **Volume**: `ml`, `cl`, `dl`, `l`, `m3`, `tsp`, `tbsp`, `floz`, `cup`, `pint`, `qt`, `gal`
+  - **Angle**: `deg`, `rad`, `grad`, `turn`
   - **Time**: `ns`, `us`, `ms`, `s`, `min`, `h`, `day`, `week`, `fortnight`
-  - **Speeds**: `mps`, `kmh`, `mph`, `fps`, `kn`
-  - **Masses**: `mg`, `g`, `kg`, `t`, `oz`, `lb`, `st`
-  - **Pressures**: `Pa`, `kPa`, `bar`, `atm`, `psi`, `mmHg`, `torr`
-  - **Energies**: `J`, `kJ`, `cal`, `kcal`, `Wh`, `kWh`, `BTU`
-  - **Powers**: `W`, `kW`, `MW`, `GW`, `hp`
-  - **Temperatures**: `celsius`, `fahrenheit`, `kelvin`
-  - **Frequencies**: `Hz`, `kHz`, `MHz`, `GHz`, `THz`
-  - **Colors**: `hex`, `rgb`, `hsl`, `tailwind`
+  - **Speed**: `mps`, `kmh`, `mph`, `fps`, `kn`
+  - **Mass**: `mg`, `g`, `kg`, `t`, `oz`, `lb`, `st`
+  - **Pressure**: `Pa`, `kPa`, `bar`, `atm`, `psi`, `mmHg`, `torr`
+  - **Energy**: `J`, `kJ`, `cal`, `kcal`, `Wh`, `kWh`, `BTU`
+  - **Power**: `W`, `kW`, `MW`, `GW`, `hp`
+  - **Temperature**: `celsius`, `fahrenheit`, `kelvin`
+  - **Frequency**: `Hz`, `kHz`, `MHz`, `GHz`, `THz`
+  - **Color**: `hex`, `rgb`, `hsl`, `tailwind`
 - 🤖 Auto-detection of input format
 - 🎯 Smart selection: works with visual selection or word-under-cursor
 - 🌳 Interactive split-window tree UI with search and live result preview
