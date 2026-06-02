@@ -7,7 +7,7 @@ local utils = require("convy.utils")
 local ns = vim.api.nvim_create_namespace("convy")
 
 local HEADER_LINES = 3 -- blank, title, divider
-local FOOTER_LINES = 4 -- divider, input, output, help
+local FOOTER_LINES = 5 -- divider, input, output, blank, help
 
 local function setup_highlights()
 	local defs = {
@@ -180,6 +180,7 @@ local function render(state)
 	end
 	add_result(in_res, not state.input_fixed)
 	add_result(out_res, state.input_fixed)
+	table.insert(lines, "")
 	table.insert(lines, "  / search  i input  ⏎ select")
 	table.insert(hls, { line = #lines - 1, s = 0, e = -1, hl = "ConvyLabel" })
 
