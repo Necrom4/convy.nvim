@@ -96,7 +96,7 @@ lua require("convy.utils").set_separator(", ") -- sets the separator to `, `
 
 **Interactive window keymaps:**
 
-- Navigation: `Up`/`Down`/`j`/`k`/`Tab`
+- Navigation: `Up`/`Down`/`j`/`k`/`Tab`/`g`/`G`
 - Select unit: `Enter`/`Space`/`Right`/`l`
 - Deselect unit: `Esc`/`BS`
 - Open/collapse group: `Enter`/`Space`

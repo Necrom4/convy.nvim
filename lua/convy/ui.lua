@@ -232,6 +232,26 @@ local function update_hover(state)
 	render(state)
 end
 
+local function goto_first(state)
+	for idx = 1, #state.rows do
+		if is_tree_row(state.rows[idx]) then
+			focus_index(state, idx)
+			update_hover(state)
+			return
+		end
+	end
+end
+
+local function goto_last(state)
+	for idx = #state.rows, 1, -1 do
+		if is_tree_row(state.rows[idx]) then
+			focus_index(state, idx)
+			update_hover(state)
+			return
+		end
+	end
+end
+
 local function move(state, delta)
 	local total = #state.rows
 	local idx = state.selected + delta
@@ -428,6 +448,8 @@ local function setup_keymaps(state)
 		end, opts)
 	end
 
+	map("g", goto_first)
+	map("G", goto_last)
 	map("j", function(s)
 		move(s, 1)
 	end)
