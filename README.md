@@ -93,6 +93,16 @@ lua require("convy").show_selector() -- open interactive selection window
 lua require("convy.utils").set_separator(", ") -- sets the separator to `, `
 ```
 
+**Interactive window keymaps:**
+
+- Navigation: `Up`/`Down`/`j`/`k`/`Tab`
+- Select unit: `Enter`/`Space`/`Right`/`l`
+- Deselect unit: `Esc`/`BS`
+- Open/collapse group: `Enter`/`Space`
+- Toggle all groups: `za`
+- Search: `/`
+- Modify input value: `i`
+
 **Examples:**
 
 > `|` represents the cursor's position, `[ ... ]` represents a visual selection.
