@@ -19,6 +19,7 @@ M.groups = {
 			{ name = "sha256" },
 			{ name = "md5" },
 			{ name = "morse" },
+			{ name = "braille" },
 		},
 	},
 	{

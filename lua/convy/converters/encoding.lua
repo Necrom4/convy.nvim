@@ -2,6 +2,13 @@ local M = {}
 local base64 = require("convy.format-logic.base64")
 local hash = require("convy.format-logic.hash")
 local morse = require("convy.format-logic.morse")
+local braille = require("convy.format-logic.braille")
+
+local function push_bytes(numbers, str)
+	for i = 1, #str do
+		table.insert(numbers, str:byte(i))
+	end
+end
 
 local function parse_input(text, input_format)
 	local numbers = {}
@@ -34,10 +41,9 @@ local function parse_input(text, input_format)
 	elseif input_format == "sha256" or input_format == "md5" then
 		error("can't decode hash formats", 0)
 	elseif input_format == "morse" then
-		local decoded_text = morse.to_text(text)
-		for i = 1, #decoded_text do
-			table.insert(numbers, decoded_text:byte(i))
-		end
+		push_bytes(numbers, morse.to_text(text))
+	elseif input_format == "braille" then
+		push_bytes(numbers, braille.to_text(text))
 	else
 		error("Unknown input format: " .. tostring(input_format), 0)
 	end
@@ -104,6 +110,8 @@ local function format_output(numbers, output_format)
 		return hash.md5(to_bytes(numbers))
 	elseif output_format == "morse" then
 		return morse.from_text(to_bytes(numbers))
+	elseif output_format == "braille" then
+		return braille.from_text(to_bytes(numbers))
 	else
 		error("Unknown output format: " .. tostring(output_format), 0)
 	end
