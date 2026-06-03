@@ -20,6 +20,9 @@ local function setup_highlights()
 		ConvyHover = { link = "String" },
 		ConvyLabel = { link = "Comment" },
 		ConvyPick = { underline = true },
+		-- Linked to Visual so the hovered line stays visible even when the
+		-- theme clears the CursorLine background.
+		ConvyCursorLine = { link = "Visual" },
 	}
 	for name, def in pairs(defs) do
 		if vim.fn.hlexists(name) == 0 then
@@ -492,6 +495,8 @@ function M.open(origin, on_confirm)
 	local cfg = require("convy").config.window
 	local width = cfg.width or 36
 
+	setup_highlights()
+
 	local buf = vim.api.nvim_create_buf(false, true)
 	vim.bo[buf].bufhidden = "wipe"
 	vim.bo[buf].filetype = "convy"
@@ -507,6 +512,7 @@ function M.open(origin, on_confirm)
 	vim.wo[win].foldcolumn = "0"
 	vim.wo[win].statuscolumn = ""
 	vim.wo[win].cursorline = true
+	vim.wo[win].winhighlight = "CursorLine:ConvyCursorLine"
 	vim.wo[win].wrap = false
 
 	local expanded = {}
