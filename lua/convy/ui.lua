@@ -184,7 +184,7 @@ local function render(state)
 	add_result(in_res, not state.input_fixed)
 	add_result(out_res, state.input_fixed)
 	table.insert(lines, "")
-	table.insert(lines, "  / search  i input  ⏎ select")
+	table.insert(lines, "  Press ? for keymaps")
 	table.insert(hls, { line = #lines - 1, s = 0, e = -1, hl = "ConvyLabel" })
 
 	vim.bo[state.buf].modifiable = true
@@ -438,57 +438,118 @@ local function edit_input(state)
 end
 
 function M.close(state)
+	if state.help_win and vim.api.nvim_win_is_valid(state.help_win) then
+		vim.api.nvim_win_close(state.help_win, true)
+	end
 	if vim.api.nvim_win_is_valid(state.win) then
 		vim.api.nvim_win_close(state.win, true)
 	end
 end
 
-local function setup_keymaps(state)
-	local opts = { noremap = true, silent = true, buffer = state.buf }
-	local function map(lhs, fn)
-		vim.keymap.set("n", lhs, function()
-			fn(state)
-		end, opts)
-	end
-
-	map("g", goto_first)
-	map("G", goto_last)
-	map("j", function(s)
-		move(s, 1)
-	end)
-	map("k", function(s)
-		move(s, -1)
-	end)
-	map("<Down>", function(s)
-		move(s, 1)
-	end)
-	map("<Up>", function(s)
-		move(s, -1)
-	end)
-	map("l", open_or_select)
-	map("<Right>", open_or_select)
-	map("h", close_or_collapse)
-	map("<Left>", close_or_collapse)
-	map("za", toggle_all)
-	map("<Tab>", function(s)
-		move_group(s, 1)
-	end)
-	map("<S-Tab>", function(s)
-		move_group(s, -1)
-	end)
-	map("<Space>", select_or_toggle)
-	map("<CR>", select_or_toggle)
-	map("/", focus_search)
-	map("i", edit_input)
-	map("<BS>", M.back)
-	map("<Esc>", function(s)
+-- Key bindings, in help-display order. Each: { lhs, fn, desc, help? }.
+-- `help = false` hides the binding from the help window (aliases).
+local keymaps = {
+	{ "j", function(s) move(s, 1) end, "Move down" },
+	{ "k", function(s) move(s, -1) end, "Move up" },
+	{ "<Down>", function(s) move(s, 1) end, "Move down", false },
+	{ "<Up>", function(s) move(s, -1) end, "Move up", false },
+	{ "g", goto_first, "Go to first" },
+	{ "G", goto_last, "Go to last" },
+	{ "<Tab>", function(s) move_group(s, 1) end, "Next group" },
+	{ "<S-Tab>", function(s) move_group(s, -1) end, "Previous group" },
+	{ "l", open_or_select, "Open group / select" },
+	{ "<Right>", open_or_select, "Open group / select", false },
+	{ "h", close_or_collapse, "Collapse / close group" },
+	{ "<Left>", close_or_collapse, "Collapse / close group", false },
+	{ "za", toggle_all, "Toggle all groups" },
+	{ "<Space>", select_or_toggle, "Toggle group / select" },
+	{ "<CR>", select_or_toggle, "Toggle group / select", false },
+	{ "/", focus_search, "Search" },
+	{ "i", edit_input, "Edit input value" },
+	{ "<BS>", M.back, "Back to input selection" },
+	{ "?", function(s) M.toggle_help(s) end, "Toggle this help" },
+	{ "<Esc>", function(s)
 		if s.input_fixed then
 			M.back(s)
 		else
 			M.close(s)
 		end
-	end)
-	map("q", M.close)
+	end, "Back / close" },
+	{ "q", M.close, "Close" },
+}
+
+-- Pretty key labels for the help window.
+local key_labels = {
+	["<CR>"] = "⏎",
+	["<Space>"] = "Space",
+	["<Tab>"] = "Tab",
+	["<S-Tab>"] = "S-Tab",
+	["<BS>"] = "BS",
+	["<Esc>"] = "Esc",
+}
+
+-- A floating window listing the keymaps, toggled with `?`.
+function M.toggle_help(state)
+	if state.help_win and vim.api.nvim_win_is_valid(state.help_win) then
+		vim.api.nvim_win_close(state.help_win, true)
+		state.help_win = nil
+		return
+	end
+
+	local rows, key_w = {}, 0
+	for _, km in ipairs(keymaps) do
+		if km[4] ~= false then
+			local key = key_labels[km[1]] or km[1]
+			table.insert(rows, { key = key, desc = km[3] })
+			key_w = math.max(key_w, #key)
+		end
+	end
+
+	local lines = {}
+	for _, r in ipairs(rows) do
+		table.insert(lines, string.format("  %s  %s", r.key .. string.rep(" ", key_w - #r.key), r.desc))
+	end
+
+	local width = 0
+	for _, l in ipairs(lines) do
+		width = math.max(width, vim.fn.strdisplaywidth(l))
+	end
+
+	local buf = vim.api.nvim_create_buf(false, true)
+	vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+	vim.bo[buf].modifiable = false
+	vim.bo[buf].bufhidden = "wipe"
+
+	local win = vim.api.nvim_open_win(buf, false, {
+		relative = "win",
+		win = state.win,
+		anchor = "SW",
+		row = vim.api.nvim_win_get_height(state.win),
+		col = -2,
+		width = width + 2,
+		height = #lines,
+		style = "minimal",
+		border = "rounded",
+		title = " Keymaps ",
+		title_pos = "center",
+		focusable = false,
+		noautocmd = true,
+	})
+	vim.wo[win].winhighlight = "NormalFloat:Normal"
+	state.help_win = win
+
+	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+	for i = 1, #rows do
+		vim.api.nvim_buf_add_highlight(buf, ns, "ConvyStrong", i - 1, 0, 2 + key_w)
+	end
+end
+
+local function setup_keymaps(state)
+	for _, km in ipairs(keymaps) do
+		vim.keymap.set("n", km[1], function()
+			km[2](state)
+		end, { noremap = true, silent = true, buffer = state.buf, desc = km[3] })
+	end
 end
 
 function M.open(origin, on_confirm)
