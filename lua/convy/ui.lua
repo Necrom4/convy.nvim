@@ -453,7 +453,7 @@ local keymaps = {
 	{ "k", function(s) move(s, -1) end, "Move up" },
 	{ "<Down>", function(s) move(s, 1) end, "Move down", false },
 	{ "<Up>", function(s) move(s, -1) end, "Move up", false },
-	{ "g", goto_first, "Go to first" },
+	{ "gg", goto_first, "Go to first" },
 	{ "G", goto_last, "Go to last" },
 	{ "<Tab>", function(s) move_group(s, 1) end, "Next group" },
 	{ "<S-Tab>", function(s) move_group(s, -1) end, "Previous group" },
