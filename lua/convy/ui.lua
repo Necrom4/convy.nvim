@@ -449,14 +449,52 @@ end
 -- Key bindings, in help-display order. Each: { lhs, fn, desc, help? }.
 -- `help = false` hides the binding from the help window (aliases).
 local keymaps = {
-	{ "j", function(s) move(s, 1) end, "Move down" },
-	{ "k", function(s) move(s, -1) end, "Move up" },
-	{ "<Down>", function(s) move(s, 1) end, "Move down", false },
-	{ "<Up>", function(s) move(s, -1) end, "Move up", false },
+	{
+		"j",
+		function(s)
+			move(s, 1)
+		end,
+		"Move down",
+	},
+	{
+		"k",
+		function(s)
+			move(s, -1)
+		end,
+		"Move up",
+	},
+	{
+		"<Down>",
+		function(s)
+			move(s, 1)
+		end,
+		"Move down",
+		false,
+	},
+	{
+		"<Up>",
+		function(s)
+			move(s, -1)
+		end,
+		"Move up",
+		false,
+	},
 	{ "gg", goto_first, "Go to first" },
 	{ "G", goto_last, "Go to last" },
-	{ "<Tab>", function(s) move_group(s, 1) end, "Next group" },
-	{ "<S-Tab>", function(s) move_group(s, -1) end, "Previous group" },
+	{
+		"<Tab>",
+		function(s)
+			move_group(s, 1)
+		end,
+		"Next group",
+	},
+	{
+		"<S-Tab>",
+		function(s)
+			move_group(s, -1)
+		end,
+		"Previous group",
+	},
 	{ "l", open_or_select, "Open group / select" },
 	{ "<Right>", open_or_select, "Open group / select", false },
 	{ "h", close_or_collapse, "Collapse / close group" },
@@ -467,14 +505,24 @@ local keymaps = {
 	{ "/", focus_search, "Search" },
 	{ "i", edit_input, "Edit input value" },
 	{ "<BS>", M.back, "Back to input selection" },
-	{ "?", function(s) M.toggle_help(s) end, "Toggle this help" },
-	{ "<Esc>", function(s)
-		if s.input_fixed then
-			M.back(s)
-		else
-			M.close(s)
-		end
-	end, "Back / close" },
+	{
+		"?",
+		function(s)
+			M.toggle_help(s)
+		end,
+		"Toggle this help",
+	},
+	{
+		"<Esc>",
+		function(s)
+			if s.input_fixed then
+				M.back(s)
+			else
+				M.close(s)
+			end
+		end,
+		"Back / close",
+	},
 	{ "q", M.close, "Close" },
 }
 
