@@ -193,7 +193,7 @@ local function render(state)
 
 	vim.api.nvim_buf_clear_namespace(state.buf, ns, 0, -1)
 	for _, h in ipairs(hls) do
-		vim.api.nvim_buf_add_highlight(state.buf, ns, h.hl, h.line, h.s, h.e)
+		vim.hl.range(state.buf, ns, h.hl, { h.line, h.s }, { h.line, h.e })
 	end
 end
 
@@ -588,7 +588,7 @@ function M.toggle_help(state)
 
 	vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
 	for i = 1, #rows do
-		vim.api.nvim_buf_add_highlight(buf, ns, "ConvyStrong", i - 1, 0, 2 + key_w)
+		vim.hl.range(buf, ns, "ConvyStrong", { i - 1, 0 }, { i - 1, 2 + key_w })
 	end
 end
 
