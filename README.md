@@ -172,17 +172,6 @@ This example treats a uint32 as a Unix timestamp (epoch seconds) and
 converts between the raw integer, hex, and an ISO 8601 UTC date:
 
 ```lua
-local function iso_to_epoch(text)
-  local y, mo, d, h, mi, s = text:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
-  if not y then return nil end
-  -- os.time uses local time; subtract the local UTC offset to get UTC epoch.
-  local utc_offset = os.time(os.date("!*t", 0))
-  return os.time({
-    year = tonumber(y), month = tonumber(mo), day = tonumber(d),
-    hour = tonumber(h), min = tonumber(mi), sec = tonumber(s), isdst = false,
-  }) - utc_offset
-end
-
 require("convy").setup({
   formats = {
     {
@@ -205,7 +194,15 @@ require("convy").setup({
           display = "ISO date",
           -- optional: makes `auto` recognise ISO dates
           detect = function(text) return text:match("^%d%d%d%d%-%d%d%-%d%dT") ~= nil end,
-          decode = iso_to_epoch,
+          decode = function(text)
+            local y, mo, d, h, mi, s = text:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
+            if not y then return nil end
+            local utc_offset = os.time(os.date("!*t", 0))
+            return os.time({
+              year = tonumber(y), month = tonumber(mo), day = tonumber(d),
+              hour = tonumber(h), min = tonumber(mi), sec = tonumber(s), isdst = false,
+            }) - utc_offset
+          end,
           encode = function(secs) return os.date("!%Y-%m-%dT%H:%M:%SZ", secs) end,
         },
       },
