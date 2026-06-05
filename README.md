@@ -212,14 +212,3 @@ require("convy").setup({
 -- :Convy unix iso     ->  1700000000 becomes 2023-11-14T22:13:20Z
 -- :Convy auto unix    ->  2023-11-14T22:13:20Z becomes 1700000000
 ```
-
-## 🏆 Roadmap
-
-- [ ] Drop visual-mode flag for util.function that guesses if we executed Convy in visual mode
-- [x] Support for more formats
-  - [x] Colors (RGB, HSL, ...)
-  - [x] Sizes (px, mm, in, ...)
-  - [x] Temperatures (C, F, ...)
-- [x] Interactive UI for selecting input/output formats
-- [x] Tab completion for conversion formats
-- [x] Automatic format detection
