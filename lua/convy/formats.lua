@@ -289,13 +289,73 @@ M.groups = {
 	},
 }
 
--- Lookups: name -> group, name -> entry.
+-- Lookups: name -> group, name -> entry. Rebuilt whenever groups change.
 local name_to_group = {}
 local name_to_entry = {}
-for _, group in ipairs(M.groups) do
-	for _, entry in ipairs(group.formats) do
-		name_to_group[entry.name] = group
-		name_to_entry[entry.name] = entry
+
+local function rebuild()
+	name_to_group = {}
+	name_to_entry = {}
+	for _, group in ipairs(M.groups) do
+		for _, entry in ipairs(group.formats) do
+			name_to_group[entry.name] = group
+			name_to_entry[entry.name] = entry
+		end
+	end
+end
+
+rebuild()
+
+-- Register a user-defined group, or extend a built-in one.
+--   { extend = "length", formats = { ... } }  -- append to an existing group
+--   { key = "epoch", label = ..., kind = ..., formats = { ... } }  -- new group
+function M.register_group(spec)
+	local target = spec
+	if spec.extend then
+		target = nil
+		for _, group in ipairs(M.groups) do
+			if group.key == spec.extend then
+				target = group
+				break
+			end
+		end
+		if not target then
+			error("convy: cannot extend unknown group '" .. spec.extend .. "'", 0)
+		end
+	else
+		if not spec.key or not spec.kind then
+			error("convy: a new group needs a 'key' and a 'kind'", 0)
+		end
+		if M.label(spec.key) then
+			error("convy: group key '" .. spec.key .. "' already exists", 0)
+		end
+	end
+
+	for _, entry in ipairs(spec.formats) do
+		if entry.name == "auto" then
+			error("convy: 'auto' is a reserved format name", 0)
+		end
+		if name_to_entry[entry.name] then
+			error("convy: format name '" .. entry.name .. "' already exists", 0)
+		end
+		if (spec.kind or (target and target.kind)) == "custom" and not (entry.decode and entry.encode) then
+			error("convy: custom format '" .. entry.name .. "' needs decode and encode functions", 0)
+		end
+		name_to_entry[entry.name] = entry -- claim the name so later specs see the collision
+	end
+
+	if spec.extend then
+		for _, entry in ipairs(spec.formats) do
+			table.insert(target.formats, entry)
+		end
+	else
+		table.insert(M.groups, spec)
+	end
+
+	rebuild()
+	local utils = require("convy.utils")
+	if utils.reset_detection then
+		utils.reset_detection()
 	end
 end
 
