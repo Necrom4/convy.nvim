@@ -26,6 +26,7 @@ A powerful Neovim plugin to convert between various formats
 - 🤖 Auto-detection of input format
 - 🎯 Smart selection: works with visual selection or word-under-cursor
 - 🌳 Interactive split-window tree UI with search and live result preview
+- 🧩 Custom formats: add your own units or conversions from your config
 
 ## 📦 Installation
 
@@ -48,6 +49,9 @@ A powerful Neovim plugin to convert between various formats
     window = {
       position = "left", -- "left" or "right"
       width = 36,
+    },
+    formats = {
+      -- custom formats, see section below
     },
   },
   keys = {
@@ -134,6 +138,82 @@ lua require("convy.utils").set_separator(", ") -- sets the separator to `, `
 " Select the input format (or `auto`) with `<CR>`/`<Space>`
 " Then select a compatible output format to apply and close
 " Result: 72 101 108 108 111
+```
+
+## 🧩 Custom formats
+
+Add your own units or conversions through `setup({ formats = { ... } })`.
+Each entry either `extend`s a built-in group or defines a new `key`/`kind`
+group. New formats appear in the selector, tab-completion and `:Convy`.
+
+### Add a unit to an existing group
+
+`length` is a `linear` group, so a new unit is just a `suffix` and a
+`factor` relative to the group's base (meters):
+
+```lua
+require("convy").setup({
+  formats = {
+    { extend = "length", formats = {
+      { name = "smoot", suffix = "smoot", factor = 1.7018 },
+    }},
+  },
+})
+-- :Convy smoot m -> 1smoot becomes 1.7018m
+```
+
+### Define a new group with custom conversions
+
+A `custom` group converts through a shared base: each format provides
+`decode(text) -> base` and `encode(base) -> text`. Conversion is
+`out.encode(in.decode(text))`, so N formats only need N function pairs.
+
+This example treats a uint32 as a Unix timestamp (epoch seconds) and
+converts between the raw integer, hex, and an ISO 8601 UTC date:
+
+```lua
+local function iso_to_epoch(text)
+  local y, mo, d, h, mi, s = text:match("(%d+)-(%d+)-(%d+)T(%d+):(%d+):(%d+)")
+  if not y then return nil end
+  -- os.time uses local time; subtract the local UTC offset to get UTC epoch.
+  local utc_offset = os.time(os.date("!*t", 0))
+  return os.time({
+    year = tonumber(y), month = tonumber(mo), day = tonumber(d),
+    hour = tonumber(h), min = tonumber(mi), sec = tonumber(s), isdst = false,
+  }) - utc_offset
+end
+
+require("convy").setup({
+  formats = {
+    {
+      key = "epoch",
+      label = "Epoch Date",
+      kind = "custom",
+      formats = {
+        {
+          name = "unix",
+          decode = function(text) return tonumber(text) end,
+          encode = function(secs) return tostring(math.floor(secs)) end,
+        },
+        {
+          name = "hex32",
+          decode = function(text) return tonumber(text, 16) end,
+          encode = function(secs) return string.format("%08X", secs) end,
+        },
+        {
+          name = "iso",
+          display = "ISO date",
+          -- optional: makes `auto` recognise ISO dates
+          detect = function(text) return text:match("^%d%d%d%d%-%d%d%-%d%dT") ~= nil end,
+          decode = iso_to_epoch,
+          encode = function(secs) return os.date("!%Y-%m-%dT%H:%M:%SZ", secs) end,
+        },
+      },
+    },
+  },
+})
+-- :Convy unix iso     ->  1700000000 becomes 2023-11-14T22:13:20Z
+-- :Convy auto unix    ->  2023-11-14T22:13:20Z becomes 1700000000
 ```
 
 ## 🏆 Roadmap
