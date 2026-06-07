@@ -15,7 +15,16 @@ M.config = {
 }
 
 function M.setup(opts)
-	M.config = vim.tbl_deep_extend("force", M.config, opts or {})
+	opts = opts or {}
+
+	local custom = opts.formats
+	opts.formats = nil
+
+	M.config = vim.tbl_deep_extend("force", M.config, opts)
+
+	for _, spec in ipairs(custom or {}) do
+		formats.register_group(spec)
+	end
 end
 
 function M.get_input_formats()
@@ -25,7 +34,6 @@ end
 function M.get_output_formats(input_format)
 	return formats.get_output_formats(input_format)
 end
-
 
 -- Capture the source text and its position from the current window.
 local function capture_origin(use_visual)

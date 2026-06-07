@@ -139,16 +139,21 @@ function M.replace_text(start_pos, end_pos, new_text)
 	vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, new_lines)
 end
 
--- Unit suffixes from the registry, longest first so ambiguous prefixes
--- (e.g. "ms"/"min" vs "m"/"s") resolve correctly. Built once.
+-- Detection data built from the registry: unit suffixes (longest first so
+-- "ms"/"min" beat "m"/"s") and custom-format detect() predicates.
 local cached_suffixes
-local function unit_suffixes()
-	if cached_suffixes then
-		return cached_suffixes
-	end
+local cached_detectors
 
+-- Invalidate caches after the registry changes (e.g. register_group).
+function M.reset_detection()
+	cached_suffixes = nil
+	cached_detectors = nil
+end
+
+local function build_detection()
 	local formats = require("convy.formats")
 	cached_suffixes = {}
+	cached_detectors = {}
 	for _, group in ipairs(formats.groups) do
 		if group.kind == "linear" then
 			for _, entry in ipairs(group.formats) do
@@ -158,13 +163,32 @@ local function unit_suffixes()
 			for _, entry in ipairs(group.formats) do
 				table.insert(cached_suffixes, { suffix = entry.letter, format = entry.name, degree = true })
 			end
+		else
+			for _, entry in ipairs(group.formats) do
+				if entry.detect then
+					table.insert(cached_detectors, entry)
+				end
+			end
 		end
 	end
 
 	table.sort(cached_suffixes, function(a, b)
 		return #a.suffix > #b.suffix
 	end)
+end
+
+local function unit_suffixes()
+	if not cached_suffixes then
+		build_detection()
+	end
 	return cached_suffixes
+end
+
+local function custom_detectors()
+	if not cached_detectors then
+		build_detection()
+	end
+	return cached_detectors
 end
 
 -- Auto-detect input format
@@ -173,7 +197,7 @@ function M.detect_format(text)
 	local clean = text:match("^%s*(.-)%s*$") or text
 	local no_spaces = text:gsub("%s", "")
 
-	-- ── Color formats ──────────────────────────────────────────────
+	-- Color formats ---------------------------------------------
 
 	if clean:match("^hsl%s*%(") then
 		return "hsl"
@@ -192,7 +216,14 @@ function M.detect_format(text)
 		return "tailwind"
 	end
 
-	-- ── Unit formats (longest suffix first, case-insensitive) ─────
+	-- User-defined custom formats -------------------------------
+	for _, entry in ipairs(custom_detectors()) do
+		if entry.detect(clean) then
+			return entry.name
+		end
+	end
+
+	-- Unit formats (longest suffix first, case-insensitive) -----
 	local function ends_with_ci(str, suffix)
 		return #str >= #suffix and str:sub(-#suffix):lower() == suffix:lower()
 	end
@@ -207,7 +238,7 @@ function M.detect_format(text)
 		end
 	end
 
-	-- ── Text encoding formats (original detection logic) ───────────
+	-- Text encoding formats (original detection logic) ----------
 
 	if no_spaces:match("^0b[01]+") then
 		return "bin"

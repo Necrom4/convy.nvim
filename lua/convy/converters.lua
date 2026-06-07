@@ -2,23 +2,13 @@ local M = {}
 
 local formats = require("convy.formats")
 
-local group_modules = {
-	angle = "convy.converters.linear",
-	area = "convy.converters.linear",
-	color = "convy.converters.color",
-	datarate = "convy.converters.linear",
-	datasize = "convy.converters.linear",
+-- Converter module per group kind.
+local kind_modules = {
+	linear = "convy.converters.linear",
 	encoding = "convy.converters.encoding",
-	energy = "convy.converters.linear",
-	frequency = "convy.converters.linear",
-	length = "convy.converters.linear",
-	mass = "convy.converters.linear",
-	power = "convy.converters.linear",
-	pressure = "convy.converters.linear",
-	speed = "convy.converters.linear",
+	color = "convy.converters.color",
 	temperature = "convy.converters.temperature",
-	time = "convy.converters.linear",
-	volume = "convy.converters.linear",
+	custom = "convy.converters.custom",
 }
 
 function M.convert(text, input_format, output_format)
@@ -44,9 +34,10 @@ function M.convert(text, input_format, output_format)
 		)
 	end
 
-	local module_path = group_modules[group]
+	local kind = formats.get_group_def(input_format).kind
+	local module_path = kind_modules[kind]
 	if not module_path then
-		error("No converter module for group: " .. tostring(group), 0)
+		error("No converter for kind: " .. tostring(kind), 0)
 	end
 
 	return require(module_path).convert(text, input_format, output_format)
